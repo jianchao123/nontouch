@@ -1,0 +1,6 @@
+logs/
+.idea/
+swagger_yaml/
+tests/
+*.pyc
+*.txt
