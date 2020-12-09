@@ -58,7 +58,7 @@ class ClientDeviceService(object):
             BusRoute.id == car.route_id).first()
         if not route:
             return -11
-        return {"fees": route.fees}
+        return {"fees": str(route.fees)}
 
     @staticmethod
     def device_update_strategy(mobiles, device_no):
