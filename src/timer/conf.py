@@ -13,11 +13,16 @@ if env == "TEST":
     log_path = "/data/logs/{}/timer".format(project_name)
     url = ""
 
-    redis_conf = dict(host="127.0.0.1", port=6379, db=0,
-                      password="kIhHAWexFy7pU8qM", decode_responses=True)
+    redis_conf = dict(host="127.0.0.1", port=6379, db=0)
 
-    mysql_conf = dict(host="127.0.0.1", port=3306, db="nontouch_1",
+    mysql_conf = dict(host="127.0.0.1", port=3306, db="wuganxing_1",
                       user="root", passwd="kIhHAWexFy7pU8qM", charset="utf8")
+
+    OSSDomain = 'https://wgxing-test.oss-cn-zhangjiakou.aliyuncs.com'
+    OSSAccessKeyId = 'LTAIWE5CGeOiozf7'
+    OSSAccessKeySecret = 'IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj'
+    OSSEndpoint = 'oss-cn-zhangjiakou.aliyuncs.com'
+    OSSBucketName = 'wgxing-test'
 
 elif env == "DEV":
     log_path = project_dir + "/logs/timer"
@@ -29,7 +34,7 @@ elif env == "DEV":
     mysql_conf = dict(host="127.0.0.1", port=3306, db="wuganxing_1",
                       user="root", passwd="kIhHAWexFy7pU8qM", charset="utf8")
 
-    OSSDomain = 'https://.oss-cn-beijing.aliyuncs.com'
+    OSSDomain = 'https://wgxing-dev.oss-cn-beijing.aliyuncs.com'
     OSSAccessKeyId = 'LTAIWE5CGeOiozf7'
     OSSAccessKeySecret = 'IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj'
     OSSEndpoint = 'oss-cn-beijing.aliyuncs.com'
