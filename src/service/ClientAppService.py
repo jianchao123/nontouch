@@ -274,7 +274,7 @@ class ClientAppService(object):
         """
         用户优惠券
         """
-
+        db.session.commit()
         sets = db.session.query(Coupon, CouponType).join(
             UserCoupe, UserCoupe.coupon_id == Coupon.id).join(
             CouponType, CouponType.id == Coupon.type_id).filter(
@@ -432,6 +432,7 @@ class ClientAppService(object):
         """
         删除face_image
         """
+        db.session.commit()
         face_image = db.session.query(FaceImg).filter(
             FaceImg.id == pk).first()
         if face_image.status != 1:

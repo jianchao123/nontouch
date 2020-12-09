@@ -25,7 +25,7 @@ class AdminUserService(object):
 
     @staticmethod
     def admin_user_list(company_id, offset, limit, username):
-
+        db.session.commit()
         query = db.session.query(AdminUser, UserRole).join(
             UserRole, UserRole.user_id == AdminUser.id).filter(
             AdminUser.company_id == company_id)
@@ -59,6 +59,7 @@ class AdminUserService(object):
         """
         检查提交的权限集合
         """
+        db.session.commit()
         user_company_permission_ids = \
             [int(row['permission_id'])
              for row in json.loads(user_company_permissions)]
@@ -150,7 +151,7 @@ class AdminUserService(object):
     @staticmethod
     def admin_user_add(company_id, password,
                        username, permissions, role):
-
+        db.session.commit()
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
         # 检查提交的权限是否大于公司
@@ -199,6 +200,7 @@ class AdminUserService(object):
 
     @staticmethod
     def admin_user_retrieve(pk):
+        db.session.commit()
         user = db.session.query(AdminUser).filter(
             AdminUser.id == pk).first()
         if not user:
@@ -286,6 +288,7 @@ class AdminUserService(object):
 
     @staticmethod
     def addition_button(user_menus, user_permission_ids):
+        db.session.commit()
         from database.Button import Button
         for menu in user_menus:
             menu_id = menu['id']
@@ -299,6 +302,7 @@ class AdminUserService(object):
 
     @staticmethod
     def login_user_info(user_id):
+        db.session.commit()
         user = db.session.query(AdminUser).filter(
             AdminUser.id == user_id).first()
 
@@ -379,6 +383,7 @@ class AdminUserService(object):
     @staticmethod
     def get_user_by_username(username):
         """根据用户名获取"""
+        db.session.commit()
         user = db.session.query(AdminUser).filter(
             AdminUser.username == username).first()
         print user

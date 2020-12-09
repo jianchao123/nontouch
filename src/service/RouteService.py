@@ -10,7 +10,7 @@ class BusRouteService(object):
 
     @staticmethod
     def route_list(company_id, line_no, offset, limit):
-
+        db.session.commit()
         query = db.session.query(BusRoute)
         if line_no:
             query = query.filter(BusRoute.line_no == line_no)
@@ -37,7 +37,7 @@ class BusRouteService(object):
 
     @staticmethod
     def route_add(company_id, start_time, end_time, fees, line_no):
-
+        db.session.commit()
         bus_route = BusRoute()
         bus_route.start_time = start_time
         bus_route.end_time = end_time
@@ -59,6 +59,7 @@ class BusRouteService(object):
 
     @staticmethod
     def route_update(pk, start_time, end_time, fees, line_no):
+        db.session.commit()
         route = db.session.query(BusRoute).filter(BusRoute.id == pk).first()
         if not route:
             return -1
@@ -81,6 +82,7 @@ class BusRouteService(object):
 
     @staticmethod
     def route_disable(pk):
+        db.session.commit()
         route = db.session.query(BusRoute).filter(BusRoute.id == pk).first()
         if not route:
             return -1
@@ -98,6 +100,7 @@ class BusRouteService(object):
 
     @staticmethod
     def route_enable(pk):
+        db.session.commit()
         route = db.session.query(BusRoute).filter(BusRoute.id == pk).first()
         if not route:
             return -1

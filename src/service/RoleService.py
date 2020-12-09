@@ -8,7 +8,7 @@ class RoleService(object):
 
     @staticmethod
     def role_list(company_id, offset, limit):
-
+        db.session.commit()
         results = []
         query = db.session.query(Roles).filter(
             Roles.company_id == company_id)
@@ -29,6 +29,7 @@ class RoleService(object):
 
     @staticmethod
     def role_update(pk, show_name, describe):
+        db.session.commit()
         role = db.session.query(Roles).filter(Roles.id == pk).first()
         if not role:
             return -1
@@ -49,7 +50,7 @@ class RoleService(object):
 
     @staticmethod
     def role_add(company_id, role_name, show_name, describe):
-
+        db.session.commit()
         roles = db.session.query(Roles).filter(
             Roles.role_name == role_name).first()
         if roles:
@@ -74,6 +75,7 @@ class RoleService(object):
 
     @staticmethod
     def role_delete(pk):
+        db.session.commit()
         role = db.session.query(Roles).filter(Roles.id == pk).first()
         if not role:
             return -1

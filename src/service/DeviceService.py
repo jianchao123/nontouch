@@ -12,7 +12,7 @@ class DeviceService(object):
 
     @staticmethod
     def device_list(company_id, car_no, device_no, offset, limit):
-
+        db.session.commit()
         query = db.session.query(Device, BusCar.bus_id).join(
             BusCar, BusCar.id == Device.car_id, isouter=True)
         if car_no:
@@ -45,6 +45,7 @@ class DeviceService(object):
     def device_add(company_id, brand, buy_date, device_no,
                    manufacture_date, model_number, name, pro_seq_number,
                    type):
+        db.session.commit()
         device = Device()
         device.brand = brand
         device.name = name
@@ -74,7 +75,7 @@ class DeviceService(object):
 
     @staticmethod
     def binding_car(car_id, pk):
-
+        db.session.commit()
         device = db.session.query(Device).filter(
             Device.id == pk).first()
         if not device:
@@ -97,7 +98,7 @@ class DeviceService(object):
         """
         解除绑定
         """
-
+        db.session.commit()
         device = db.session.query(Device).filter(
             Device.id == pk).first()
         if not device:
@@ -119,6 +120,7 @@ class DeviceService(object):
     def device_update(pk, brand, buy_date, device_no, manufacture_date,
                       model_number, name, pro_seq_number,
                       type):
+        db.session.commit()
         device = db.session.query(Device).filter(Device.id == pk).first()
         if not device:
             return -1

@@ -13,6 +13,7 @@ class StationService(object):
 
     @staticmethod
     def station_list(company_id, bus_route_id, round_trip):
+        db.session.commit()
         query = db.session.query(
             BusStation, RouteStationRelation.code,
             RouteStationRelation.round_trip).join(
@@ -61,6 +62,7 @@ class StationService(object):
         """
         先删除所有关系记录,然后添加
         """
+        db.session.commit()
         db.session.query(RouteStationRelation).filter(
             RouteStationRelation.bus_route_id == bus_route,
             RouteStationRelation.round_trip == round_trip).delete()

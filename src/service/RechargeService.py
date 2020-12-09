@@ -10,6 +10,7 @@ class RechargeService(object):
 
     @staticmethod
     def recharge_list(company_id, find_str, pay_type, status, offset, limit):
+        db.session.commit()
         query = db.session.query(Recharge, UserProfile.username).join(
             UserProfile, UserProfile.id == Recharge.user_id).filter(
             Recharge.company_id == company_id)

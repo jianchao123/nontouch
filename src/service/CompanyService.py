@@ -18,7 +18,7 @@ class CompanyService(object):
 
     @staticmethod
     def company_list(company_id, name, offset, limit):
-
+        db.session.commit()
         query = db.session.query(Company)
         login_company = db.session.query(Company).filter(
             Company.id == company_id).first()
@@ -73,6 +73,7 @@ class CompanyService(object):
     def company_add(company_id, area_id, city_id, province_id, house_number,
                     line_nos, mobile, name, password, permissions,
                     username):
+        db.session.commit()
         # 检查上传的权限,添加公司的权限不能超过自己公司的权限
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
@@ -183,6 +184,7 @@ class CompanyService(object):
     def company_update(company_id, pk, area_id, city_id, province_id,
                        house_number, mobile, name, new_permissions,
                        username, password):
+        db.session.commit()
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
         if CompanyService.check_commit_permission(
@@ -244,6 +246,7 @@ class CompanyService(object):
 
     @staticmethod
     def company_disable(pk):
+        db.session.commit()
         company = db.session.query(Company).filter(Company.id == pk).first()
         if not company:
             return -1
@@ -269,6 +272,7 @@ class CompanyService(object):
 
     @staticmethod
     def company_enable(pk):
+        db.session.commit()
         company = db.session.query(Company).filter(Company.id == pk).first()
         if not company:
             return -1

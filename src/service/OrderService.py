@@ -12,6 +12,7 @@ class OrderService(object):
 
     @staticmethod
     def order_list(company_id, mobile, offset, limit):
+        db.session.commit()
         query = db.session.query(Order, UserProfile, Company, BusRoute).join(
             UserProfile, UserProfile.id == Order.user_id).join(
             Company, Company.id == Order.company_id).join(

@@ -17,6 +17,7 @@ class CarService(object):
         """
         车辆列表
         """
+        db.session.commit()
         company = db.session.query(Company).filter(
             Company.id == company_id).first()
 
@@ -64,6 +65,7 @@ class CarService(object):
     def car_add(company_id, brand, bus_id, bus_load, buy_date,
                 chassis, engine, load, model_number, product_date,
                 type, is_servicing):
+        db.session.commit()
         car = BusCar()
         car.brand = brand
         car.bus_id = bus_id
@@ -96,6 +98,7 @@ class CarService(object):
                    buy_date, chassis, engine, load,
                    model_number, product_date,
                    type, is_servicing):
+        db.session.commit()
         car = db.session.query(BusCar).filter(BusCar.id == pk).first()
         if not car:
             return -1
@@ -127,6 +130,7 @@ class CarService(object):
         :param route_id:
         :return:
         """
+        db.session.commit()
         car = db.session.query(BusCar).filter(BusCar.id == pk).first()
         if not car:
             return -1
@@ -148,6 +152,7 @@ class CarService(object):
 
     @staticmethod
     def car_unbinding(pk):
+        db.session.commit()
         car = db.session.query(BusCar).filter(BusCar.id == pk).first()
         if not car:
             return -1

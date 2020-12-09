@@ -31,7 +31,7 @@ class CallbackService(object):
     @staticmethod
     def alipay_callback(out_trade_no, trade_no, trade_status,
                         total_amount, gmt_payment):
-
+        db.session.commit()
         try:
             # 互斥锁
             recharge = db.session.query(Recharge).filter(
@@ -75,7 +75,7 @@ class CallbackService(object):
         import json
         from utils import weixinpay
         from database.UserProfile import UserProfile
-
+        db.session.commit()
         resp_dict = {'return_code': 'FAIL', 'return_msg': 'OK'}
         pay = weixinpay.get_wein_pay(1)  # 默认为APP
         data = pay.to_dict(data)
@@ -241,6 +241,7 @@ class CallbackService(object):
 
     @staticmethod
     def face_callback(device_no, scan_time, mobile, verify_type, sub_account):
+        db.session.commit()
         device_dict = cache.hgetall(device_no)
         if device_dict:
             print device_dict
@@ -328,7 +329,7 @@ class CallbackService(object):
     @staticmethod
     def qrcode_callback(mobile, device_no, up_time,
                         verify_type, longitude, latitude):
-
+        db.session.commit()
         # 缓存设备相关信息
         rds_conn = cache
         device_dict = rds_conn.hgetall(device_no)
