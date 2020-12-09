@@ -318,7 +318,7 @@ class CallbackService(object):
             return -15
 
         ret_data = {"mobile": user_mobile,
-                    "amounts": user_amounts}
+                    "amounts": str(user_amounts)}
 
         # 写入rds
         cache.set(k, 1)
@@ -394,5 +394,5 @@ class CallbackService(object):
             return -15  # 提交失败
 
         ret_data = {"mobile": userprofile.mobile,
-                    "amounts": userprofile.balance}
+                    "amounts": str(userprofile.balance)}
         return ret_data

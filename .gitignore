@@ -3,4 +3,3 @@ logs/
 swagger_yaml/
 tests/
 *.pyc
-*.txt
