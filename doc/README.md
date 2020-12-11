@@ -23,12 +23,6 @@ producer.generate_create_user_msg(d["id"])
 python run.py
 ```
 
-# MNS
-
-### mns启动
-```
-python recvdelmessage.py
-```
 
 # 服务器返回数据格式
 ### 数据格式
@@ -39,3 +33,9 @@ python recvdelmessage.py
     "status": 0 # 0 接口正常,非0表示接口错误,具体错误看对应的接口
 }
 ```
+
+# apt-get预装
+### mysql M2Crypto 
+> sudo apt-get install libmysqld-dev
+sudo apt-get install swig
+sudo apt-get install uwsgi-plugin-python
