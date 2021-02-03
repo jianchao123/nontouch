@@ -51,20 +51,20 @@ def transaction(is_commit=False):
 
 class MysqlDbUtil(object):
 
-    def __init__(self, mysql_cur):
-        self.mysql_cur = mysql_cur
-
-    def get(self, sql):
-        self.mysql_cur.execute(sql)
-        result = self.mysql_cur.fetchone()
+    @staticmethod
+    def get(mysql_cur, sql):
+        mysql_cur.execute(sql)
+        result = mysql_cur.fetchone()
         return result
 
-    def query(self, sql):
-        self.mysql_cur.execute(sql)
-        result = self.mysql_cur.fetchall()
+    @staticmethod
+    def query(mysql_cur, sql):
+        mysql_cur.execute(sql)
+        result = mysql_cur.fetchall()
         return result
 
-    def insert(self, data, table_name=None):
+    @staticmethod
+    def insert(mysql_cur, data, table_name=None):
         keys = ""
         values = ""
         time_list = ["now()", "NOW()", "current_timestamp",
@@ -81,9 +81,10 @@ class MysqlDbUtil(object):
         values = values[:-1]
 
         sql = "insert into {}({}) values({})".format(table_name, keys, values)
-        self.mysql_cur.execute(sql)
+        mysql_cur.execute(sql)
 
-    def update(self, data, table_name=None):
+    @staticmethod
+    def update(mysql_cur, data, table_name=None):
         sql = "UPDATE {} SET ".format(table_name)
         for k, v in data.iteritems():
             if k != '`id`':
@@ -95,5 +96,5 @@ class MysqlDbUtil(object):
                 else:
                     sql += k + "=" + "'" + v + "'" + ","
         sql = sql[:-1] + " WHERE `id` = {}".format(data["`id`"])
-        self.mysql_cur.execute(sql)
+        mysql_cur.execute(sql)
         return sql

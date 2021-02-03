@@ -65,6 +65,7 @@ class SubErrorCode(object):
     APP_CERT_REPETITION_REGISTER_FACE = \
         (200058, u"不能重复注册人脸,请先删除以前的子账户或关闭账号")
     APP_USER_ALREADY_REGISTERED_FACE = (200059, u"用户已经注册人脸")
+    APP_COUPON_CODE_ERR = (200060, u"优惠券code错误")
 
     DEVICE_UNKNOWN_ERROR = (200091, u"设备未知错误")
     DEVICE_UNREGISTER_FACE = (200092, u"未注册人脸")

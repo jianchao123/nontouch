@@ -63,7 +63,7 @@ else:
 
 
 redis_conf = dict(host="127.0.0.1", port=6379, db=0, decode_responses=True)
-mysql_conf = dict(host=mysql_host, db="nontouch_1", port=3306, user=user,
+mysql_conf = dict(host=mysql_host, db="wuganxing_1", port=3306, user=user,
                   passwd=mysql_passwd, charset="utf8")
 
 logger = get_logger(log_path)

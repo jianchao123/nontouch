@@ -303,6 +303,8 @@ class ClientAppService(object):
         db.session.commit()
         coupon = db.session.query(Coupon).filter(
             Coupon.code == code).first()
+        if not coupon:
+            return -12
         if coupon.status != 1:
             return -10  # 优惠券状态错误
 

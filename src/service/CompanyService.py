@@ -2,6 +2,7 @@
 import json
 from collections import defaultdict
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import or_
 
 from database.db import db
 from database.Company import Company
@@ -9,7 +10,6 @@ from database.AdminUser import AdminUser
 from database.UserRole import UserRole
 from database.Roles import Roles
 from database.UserPermissions import UserPermissions
-from database.Permissions import Permissions
 
 from utils.tools import md5_encrypt
 
@@ -19,12 +19,9 @@ class CompanyService(object):
     @staticmethod
     def company_list(company_id, name, offset, limit):
         db.session.commit()
-        query = db.session.query(Company)
-        login_company = db.session.query(Company).filter(
-            Company.id == company_id).first()
-        if login_company.level == 2:
-            query = query.filter(Company.company_id == company_id,
-                                 Company.level == 2)
+        query = db.session.query(Company).filter(
+            or_(Company.company_id == company_id,
+                Company.parent_id == company_id))
 
         if name:
             query = query.filter(Company.name == name)
@@ -106,8 +103,8 @@ class CompanyService(object):
         company.status = 1
         company.permissions = permissions
         company.admin_user_id = new_user_id
-        company.level = 2   # 默认为2级公司
-        company.parent_id = 1   # 1是无感行
+        company.level = login_user_company.level + 1
+        company.parent_id = company_id
         db.session.add(company)
         db.session.flush()
         new_company_id = company.id
@@ -152,6 +149,11 @@ class CompanyService(object):
 
         try:
             db.session.commit()
+            from msgqueue import producer
+            from database.DistrictCode import DistrictCode
+            districtcode = db.session.query(DistrictCode).filter(
+                DistrictCode.id==area_id).first()
+            producer.generate_get_station_msg(line_nos, districtcode.ad, company_id)
         except SQLAlchemyError:
             db.session.rollback()
             return -2

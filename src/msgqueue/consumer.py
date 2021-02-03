@@ -15,9 +15,7 @@ current_dir = os.path.dirname(current_dir)
 sys.path.insert(0, current_dir)
 
 import pika
-from msgqueue.consume_business import UserConsumer
-from msgqueue.consume_business import DeviceConsumer
-from msgqueue.consume_business import ExportExcelConsumer
+from msgqueue.consume_business import BusConsumer
 from msgqueue.consume_business import HeartBeatConsumer
 
 print("start subscriber")
@@ -30,28 +28,19 @@ def start_subscriber():
     # 声明交换机
     # Exchange为topic时,生产者可以指定一个支持通配符的RoutingKey（如demo.*）
     # 发向此Exchange,凡是Exchange上RoutingKey满足此通配符的Queue就会收到消息
-    channel.exchange_declare(exchange='user_exchange', exchange_type='topic')
-    channel.exchange_declare(exchange='device_exchange', exchange_type='topic')
-    channel.exchange_declare(exchange='excel_exchange', exchange_type='topic')
-    channel.exchange_declare(exchange='heartbeat_exchange', exchange_type='topic')
+    channel.exchange_declare(exchange='bus_exchange', exchange_type='topic')
+    channel.exchange_declare(exchange='heartbeat_exchange',
+                             exchange_type='topic')
 
     # 声明消息队列, durable消息队列持久化
-    channel.queue_declare(queue="user_queue", durable=True)
-    channel.queue_declare(queue="device_queue", durable=True)
-    channel.queue_declare(queue="excel_queue", durable=True)
+    channel.queue_declare(queue="bus_queue", durable=True)
     channel.queue_declare(queue='heartbeat_queue', durable=True)
 
     # 绑定交换机和队列(一个交换机可以绑定多个队列)
     # routing_key路由器(绑定到队列上),携带该路由的消息都将被分发到该消息队列
-    channel.queue_bind(exchange='user_exchange',
-                       queue="user_queue",
-                       routing_key="user.*")
-    channel.queue_bind(exchange='device_exchange',
-                       queue="device_queue",
-                       routing_key="device.*")
-    channel.queue_bind(exchange='excel_exchange',
-                       queue="excel_queue",
-                       routing_key="excel.*")
+    channel.queue_bind(exchange='bus_exchange',
+                       queue="bus_queue",
+                       routing_key="bus.*")
     channel.queue_bind(exchange='heartbeat_exchange',
                        queue="heartbeat_queue",
                        routing_key="heartbeat")
@@ -59,21 +48,12 @@ def start_subscriber():
     channel.basic_qos(prefetch_count=1)
 
     # 消费者 auto_ack=False设置为手动确认消息
-    user_consumer = UserConsumer()
+    bus_consumer = BusConsumer()
     channel.basic_consume(
-        queue="user_queue",
-        on_message_callback=user_consumer.user_callback,
+        queue="bus_queue",
+        on_message_callback=bus_consumer.callback,
         auto_ack=False)
-    device_consumer = DeviceConsumer()
-    channel.basic_consume(
-        queue="device_queue",
-        on_message_callback=device_consumer.device_callback,
-        auto_ack=False)
-    excel_consumer = ExportExcelConsumer()
-    channel.basic_consume(
-        queue="excel_queue",
-        on_message_callback=excel_consumer.excel_callback,
-        auto_ack=False)
+
     heartbeat_consumer = HeartBeatConsumer()
     channel.basic_consume(
         queue="heartbeat_queue",

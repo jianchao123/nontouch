@@ -524,6 +524,8 @@ responses:
         raise AppError(*SubErrorCode.APP_COUPON_STATUS_ERR)
     if ret == -11:
         raise AppError(*SubErrorCode.APP_COUPON_ACTIVITY_NOT_STARTING)
+    if ret == -12:
+        raise AppError(*SubErrorCode.APP_COUPON_CODE_ERR)
     return ret
 
 
@@ -1020,6 +1022,7 @@ responses:
     to_whom = args.get('to_whom', None)
     remote_addr = request.remote_addr
     token = request.headers.get('token')
+    amount = 0.01
     is_mini = 0
     if 'MINI' in token:
         is_mini = 1
@@ -1712,6 +1715,8 @@ responses:
     enterprise_address = args.get('enterprise_address', None)
     enterprise_phone = args.get('enterprise_phone', None)
     recharge_pks = args['recharge_pks']
+    if len(email) > 16:
+        raise AppError(*GlobalErrorCode.PARAM_ERROR)
 
     ret = ClientAppService.create_bill(
         user_id, headline, headline_type, bank_name, bank_account,

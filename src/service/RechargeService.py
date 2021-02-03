@@ -22,7 +22,7 @@ class RechargeService(object):
         if status:
             query = query.filter(Recharge.status == status)
         count = query.count()
-        sets = query.offset(offset).limit(limit)
+        sets = query.order_by(Recharge.id.desc()).offset(offset).limit(limit)
         results = []
         for row in sets:
             recharge = row[0]

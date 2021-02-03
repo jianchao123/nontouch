@@ -223,7 +223,10 @@ class CallbackService(object):
             order.sub_account = user.mobile
 
         # 扣款
+        print "---------------------------------1."
+        print order.real_amount
         if order.real_amount:
+            print "------------------------------2."
             user.balance -= Decimal(str(order.real_amount))
         order.status = 2
         order.create_time = datetime.now()

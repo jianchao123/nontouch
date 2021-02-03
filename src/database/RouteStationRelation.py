@@ -1,6 +1,11 @@
 # coding:utf-8
 from db import db
 
+round_trip_tuple = (
+	(1, "去程"),
+	(2, "返程"),
+)
+
 
 class RouteStationRelation(db.Model):
 	"""线路站点关系"""

@@ -24,7 +24,7 @@ class DevelopmentConfig(Config):
     OSS_ALL_KEY = "LTAIWE5CGeOiozf7"  # 所有权限
     OSS_ALL_SECRET = "IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj"
 
-    PAY_HOST = 'https://penganbigscreen.wgxing.com'
+    PAY_HOST = 'https://ngrokpay.wgxing.com'
 
     # 支付宝支付
     APP_ID = '2019121169830445'

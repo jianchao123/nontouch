@@ -21,6 +21,6 @@ class Company(db.Model):
 	area_id = db.Column(db.Integer)			# 区
 	city_id = db.Column(db.Integer)			# 市
 	province_id = db.Column(db.Integer)		# 省
-	level = db.Column(db.Integer)			# 等级 1-五感行 2-其他公交公司
+	level = db.Column(db.Integer)			# 等级 1-五感行 2-其他公交公司 3-其他公交
 	parent_id = db.Column(db.Integer)		# 父级公司
 	company_id = db.Column(db.Integer)		# 所属公司

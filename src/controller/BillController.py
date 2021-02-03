@@ -1,16 +1,14 @@
 # coding:utf-8
-try:
-    from flask.blueprints import Blueprint
 
-    from core.framework import get_require_check_with_permissions, \
-        post_require_check_with_permissions
-    from core.AppError import AppError
-    from utils.defines import SubErrorCode, GlobalErrorCode
+from flask.blueprints import Blueprint
 
-    from service.BillService import BillService
-except:
-    import traceback
-    print traceback.format_exc()
+from core.framework import get_require_check_with_permissions, \
+    post_require_check_with_permissions
+from core.AppError import AppError
+from utils.defines import SubErrorCode, GlobalErrorCode
+
+from service.BillService import BillService
+
 
 try:
     import requests

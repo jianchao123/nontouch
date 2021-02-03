@@ -5,10 +5,6 @@ status_tuple = (
 	(1, "启用"),
 	(2, "禁用"),
 )
-round_trip_tuple = (
-	(1, "去程"),
-	(2, "返程"),
-)
 
 
 class BusStation(db.Model):
@@ -17,7 +13,8 @@ class BusStation(db.Model):
 	__tablename__ = 'bus_station'
 
 	id = db.Column(db.BigInteger, primary_key=True)
-	name = db.Column(db.String(32))			# 名字
+	name = db.Column(db.String(32))			# 名字(可同名)
+	number = db.Column(db.Integer)			# 取值 1或2
 	status = db.Column(db.Integer)			# 状态
 	longitude = db.Column(db.Numeric(11, 6))	# 经度
 	latitude = db.Column(db.Numeric(11, 6))		# 纬度
