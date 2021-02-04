@@ -1,5 +1,6 @@
 # coding: utf-8
 import json
+import time
 import urllib
 import requests
 from msgqueue import conf
@@ -48,8 +49,10 @@ class GetStationBusiness(object):
         district_code = data['district_code']
         company_id = data['company_id']
 
+        station_name_sql = "SELECT `number` FROM `bus_station` " \
+                           "WHERE `name`='{}' AND `company_id`={}"
         station_sql = "SELECT `id` FROM `bus_station` " \
-                      "WHERE `name`='{}' AND `number`={}"
+                      "WHERE `longitude`={} AND `latitude`={}"
 
         busline_sql = "SELECT `id` FROM `bus_route` WHERE `line_no`='{}'"
         req_url = "https://ditu.amap.com/service/poiBus?" \
@@ -123,22 +126,34 @@ class GetStationBusiness(object):
 
                 # 添加站点
                 for station in go_stations:
-                    # 1号站点
+                    station_name = station['name']
+                    gps = station['location']
+                    lng = gps['lng']
+                    lat = gps['lat']
+
                     station_obj = db.get(
-                        sql_cur, station_sql.format(station['name'], 1))
+                        sql_cur, station_sql.format(lng, lat))
                     if not station_obj:
-                        gps = station['location']
+                        station_name_obj = db.get(
+                            sql_cur, station_name_sql.format(station_name, company_id))
+                        if station_name_obj:
+                            print "----------------------------"
+                            print station_name_obj
+                            patch = station_name_obj[0]
+                        else:
+                            patch = str(time.time()).replace('.', '')
                         d = {
-                            'name': station['name'],
+                            'name': station_name,
                             'status': 1,
-                            'longitude': gps['lng'],
-                            'latitude': gps['lat'],
-                            'number': 1,
+                            'longitude': lng,
+                            'latitude': lat,
+                            'number': patch,
                             'company_id': company_id
                         }
+                        print d
                         db.insert(sql_cur, d, table_name='bus_station')
                         station_obj = db.get(
-                            sql_cur, station_sql.format(station['name'], 1))
+                            sql_cur, station_sql.format(lng, lat))
 
                     # 线路站点关系
                     tmp = db.get(sql_cur, relation_sql.format(
@@ -148,27 +163,39 @@ class GetStationBusiness(object):
                             'code': station['sequence'],
                             'round_trip': 1,
                             'bus_route_id': busline_obj1[0],
-                            'bus_station_id': station_obj[0]
-                        }
-                        db.insert(sql_cur, d, table_name='route_station_relation')
-
-                for station in ret_stations:
-                    # 2号站点
-                    station_obj = db.get(
-                        sql_cur, station_sql.format(station['name'], 2))
-                    if not station_obj:
-                        gps = station['location']
-                        d = {
-                            'name': station['name'],
-                            'status': 1,
-                            'longitude': gps['lng'],
-                            'latitude': gps['lat'],
-                            'number': 2,
+                            'bus_station_id': station_obj[0],
                             'company_id': company_id
                         }
+                        db.insert(sql_cur, d,
+                                  table_name='route_station_relation')
+
+                for station in ret_stations:
+                    station_name = station['name']
+                    gps = station['location']
+                    lng = gps['lng']
+                    lat = gps['lat']
+
+                    station_obj = db.get(
+                        sql_cur, station_sql.format(lng, lat))
+                    if not station_obj:
+                        station_name_obj = db.get(
+                            sql_cur, station_name_sql.format(station_name, company_id))
+                        if station_name_obj:
+                            patch = station_name_obj[0]
+                        else:
+                            patch = str(time.time()).replace('.', '')
+                        d = {
+                            'name': station_name,
+                            'status': 1,
+                            'longitude': lng,
+                            'latitude': lat,
+                            'number': patch,
+                            'company_id': company_id
+                        }
+                        print d
                         db.insert(sql_cur, d, table_name='bus_station')
                         station_obj = db.get(
-                            sql_cur, station_sql.format(station['name'], 2))
+                            sql_cur, station_sql.format(lng, lat))
 
                     # 线路站点关系
                     tmp = db.get(sql_cur, relation_sql.format(
@@ -179,7 +206,8 @@ class GetStationBusiness(object):
                             'code': station['sequence'],
                             'round_trip': 1,
                             'bus_route_id': busline_obj2[0],
-                            'bus_station_id': station_obj[0]
+                            'bus_station_id': station_obj[0],
+                            'company_id': company_id
                         }
                         db.insert(sql_cur, d,
                                   table_name='route_station_relation')

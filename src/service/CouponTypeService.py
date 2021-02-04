@@ -66,12 +66,14 @@ class CouponTypeService(object):
                         use_begin_time, use_end_time, volume):
         volume = int(volume)
         try:
-            if use_end_time < use_begin_time:
+            if use_end_time <= use_begin_time:
                 return -10  # 使用结束时间应该大于使用开始时间
-            if use_begin_time < give_out_end_time:
-                return -11  # 使用开始时间应该大于分发结束时间
-            if give_out_end_time < give_out_begin_time:
+            if give_out_end_time <= give_out_begin_time:
                 return -12  # 分发结束时间应该大于分发开始时间
+            if use_begin_time < give_out_begin_time:
+                return -11  # 使用开始时间应该大于等于分发开始时间
+            if use_end_time < give_out_end_time:
+                return -15  # 使用结束时间应该大于等于分发结束时间
             if condition == 2 and volume % 2 != 0:
                 return -13  # 邀请新用户领取优惠券活动,数量必须为偶数
             if condition == 2:

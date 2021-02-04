@@ -193,8 +193,9 @@ class ClientAppService(object):
         d['content'] = get_content()
 
         # 优惠券
-        coupon_number = db.session.query(UserCoupe).filter(
-            UserCoupe.user_id == user_id).count()
+        coupon_number = db.session.query(UserCoupe).join(
+            Coupon, Coupon.id == UserCoupe.coupon_id).filter(
+            UserCoupe.user_id == user_id, Coupon.status == 2).count()
         d['coupon_number'] = coupon_number
         return d
 
@@ -555,6 +556,7 @@ class ClientAppService(object):
         db.session.commit()
         query = db.session.query(Recharge)
         if is_open_bill:
+            is_open_bill = int(is_open_bill)
             bill_detail_sets = db.session.query(BillDetail).join(
                 Bill, Bill.id == BillDetail.bill_id).filter(
                 Bill.user_id == user_id).all()
@@ -563,6 +565,8 @@ class ClientAppService(object):
                 query = query.filter(Recharge.id.in_(recharge_ids))
             elif is_open_bill == 2:
                 query = query.filter(Recharge.id.notin_(recharge_ids))
+            query = query.filter(
+                Recharge.user_id == user_id, Recharge.status == 2)
         else:
             query = query.filter(Recharge.user_id == user_id)
 
@@ -654,15 +658,16 @@ class ClientAppService(object):
         """
         db.session.commit()
         instance = db.session.query(Recharge).filter(
-            Recharge.order_no == order_no).first()
+            Recharge.order_no == str(order_no)).first()
         if instance.status != 1:
             return -10  # ORDER_UNABLE_RECALL
 
-        data = {'user': instance.user_id, 'name': instance.name,
+        data = {'user': instance.user_id, 'name': instance.name.encode('utf-8'),
                 'amount': instance.amount, 'body': instance.body,
-                'to_whom': instance.to_whom}
+                'to_whom': instance.to_whom, 'pay_type': instance.pay_type,
+                'order_no': instance.order_no}
         if instance.pay_type == 1:
-            return ClientAppService.get_sign(data)
+            return {'results': ClientAppService.get_sign(data)}
         elif instance.pay_type == 2:
             return weixinpay.get_unified_ordering(data, remote_addr)
 
@@ -684,7 +689,7 @@ class ClientAppService(object):
             BusRoute, BusRoute.id == Order.route_id).join(
             UserProfile, UserProfile.id == Order.user_id).join(
             Company, Company.id == Order.company_id).filter(
-            Order.user_id == user_id).all()
+            Order.user_id == user_id).order_by(Order.id.desc()).all()
         results = []
         for row in sets:
             order = row[0]
@@ -842,11 +847,11 @@ class ClientAppService(object):
     def lostandfound_list(user_id, is_query_me):
         db.session.commit()
         query = db.session.query(LostAndFound).filter(LostAndFound.status != 10)
-        if is_query_me:
+        if is_query_me and int(is_query_me):
             query = query.filter(LostAndFound.create_user_id == user_id)
-        adverts = query.all()
+        lost_and_founds = query.all()
         results = []
-        for row in adverts:
+        for row in lost_and_founds:
             d = defaultdict()
             d['id'] = row.id
             d['description'] = row.description
@@ -857,7 +862,7 @@ class ClientAppService(object):
             d['imgs'] = row.imgs
             d['is_admin_publish'] = True if row.is_admin_publish else False
             d['create_user_id'] = row.create_user_id
-            d['create_time'] = row.create_time.strftime('%Y-%m-%d %H:%M%:S')
+            d['create_time'] = row.create_time.strftime('%Y-%m-%d %H:%M:%S')
             if user_id == row.create_user_id:
                 d['is_me'] = True
             else:
@@ -876,6 +881,7 @@ class ClientAppService(object):
         lost.imgs = imgs
         lost.create_user_id = user_id
         lost.is_admin_publish = 0
+        lost.company_id = 1 # 五感行
         lost.status = 1
         try:
             db.session.add(lost)

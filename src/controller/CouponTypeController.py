@@ -247,6 +247,8 @@ responses:
         raise AppError(*SubErrorCode.ACTIVITY_ERR13)
     if ret == -14:
         raise AppError(*SubErrorCode.ACTIVITY_ERR14)
+    if ret == - 15:
+        raise AppError(*SubErrorCode.ACTIVITY_ERR15)
     return ret
 
 

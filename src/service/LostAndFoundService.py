@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from database.db import db
 from database.LostAndFound import LostAndFound
 from database.AdminUser import AdminUser
+from database.UserProfile import UserProfile
 
 
 class LostAndFoundService(object):
@@ -22,9 +23,16 @@ class LostAndFoundService(object):
 
         results = []
         for row in sets:
-            admin_user = db.session.query(AdminUser).filter(
-                AdminUser.id == row.create_user_id).first()
             d = defaultdict()
+            if row.is_admin_publish:
+                admin_user = db.session.query(AdminUser).filter(
+                    AdminUser.id == row.create_user_id).first()
+                d['create_user_name'] = u'管理员'
+            else:
+                user_profile = db.session.query(UserProfile).filter(
+                    UserProfile.id == row.create_user_id).first()
+                d['create_user_name'] = user_profile.mobile
+
             d['id'] = row.id
             d['description'] = row.description
             d['city'] = row.city
@@ -34,7 +42,7 @@ class LostAndFoundService(object):
             d['imgs'] = row.imgs
             d['is_admin_publish'] = row.is_admin_publish
             d['create_user_id'] = row.create_user_id
-            d['create_user_name'] = admin_user.mobile
+
             d['create_time'] = row.create_time.strftime('%Y-%m-%d %H:%M:%S')
             results.append(d)
         return {'count': count, 'results': results}

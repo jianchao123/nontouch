@@ -51,11 +51,6 @@ parameters:
     in: query
     type: integer
     description: 线路id
-  - name: round_trip
-    in: query
-    type: integer
-    description: 去返程 1-去程 2-返程
-
 responses:
   200:
     description: 正常返回http code 200
@@ -73,9 +68,6 @@ responses:
             id:
               type: integer
               description: 员工id
-            code:
-              type: integer
-              description: 该站点在这条线路上的序号
             company:
               type: integer
               description: 公司id
@@ -88,30 +80,18 @@ responses:
             longitude:
               type: number
               description: 经度
-            line_nos:
+            line_no:
               type: string
               description: 线路名字
-            name:
-              type: string
-              description: 公司名称
-            round_trip:
-              type: integer
-              description: 去反程 1-去程 2-反程
-            round_trip_name:
-              type: string
-              description: 去反程
             status:
               type: integer
               description: 1-启用 2-禁用
-            status_name:
-               type: string
-               description: 状态名字
-
-
+            number:
+              type: integer
+              description: 站点号 1 一号站 2 二号站
     """
     route_id = args.get('bus_route', None)
-    round_trip = args.get('round_trip', None)
-    return StationService.station_list(company_id, route_id, round_trip)
+    return StationService.station_list(company_id, route_id)
 
 
 @bp.route('/station/add', methods=['POST'])
@@ -141,13 +121,10 @@ parameters:
       properties:
         data:
           type: string
-          description: '[{"latitude": "31.027058", "code": 0, "name": "\\u9526\\u5c4f\\u9547", "longitude": "106.378391"}]'
+          description: 例 1,2,3,4  站点id,逗号拼接,按照页面展示顺序拼接
         bus_route:
           type: integer
           description: 线路id
-        round_trip:
-          type: integer
-          description: 去返程 1-去 2-返
 
 responses:
   200:
@@ -171,8 +148,7 @@ responses:
     """
     data = args['data']
     bus_route = args['bus_route']
-    round_trip = args['round_trip']
-    ret = StationService.station_add(company_id, data, bus_route, round_trip)
+    ret = StationService.station_add(company_id, data, bus_route)
     if ret == -1:
         raise AppError(*SubErrorCode.NOT_PC_USER)
     if ret == -2:

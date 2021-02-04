@@ -14,7 +14,7 @@ class BusStation(db.Model):
 
 	id = db.Column(db.BigInteger, primary_key=True)
 	name = db.Column(db.String(32))			# 名字(可同名)
-	number = db.Column(db.Integer)			# 取值 1或2
+	number = db.Column(db.String(32))			# 批次号
 	status = db.Column(db.Integer)			# 状态
 	longitude = db.Column(db.Numeric(11, 6))	# 经度
 	latitude = db.Column(db.Numeric(11, 6))		# 纬度

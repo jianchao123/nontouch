@@ -30,6 +30,7 @@ class ActivitiesTimer(object):
             pk = row[0]
             give_out_begin_time = row[1]
             give_out_end_time = row[2]
+
             status = row[5]
 
             d = defaultdict()

@@ -1715,7 +1715,7 @@ responses:
     enterprise_address = args.get('enterprise_address', None)
     enterprise_phone = args.get('enterprise_phone', None)
     recharge_pks = args['recharge_pks']
-    if len(email) > 16:
+    if len(email) > 32:
         raise AppError(*GlobalErrorCode.PARAM_ERROR)
 
     ret = ClientAppService.create_bill(

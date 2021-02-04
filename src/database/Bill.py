@@ -21,7 +21,7 @@ class Bill(db.Model):
 	headline_type = db.Column(db.Integer)		# 抬头类型
 	bank_name = db.Column(db.String(32))		# 开户行名字
 	bank_account = db.Column(db.String(32))		# 银行账户
-	email = db.Column(db.String(16))			# 邮箱
+	email = db.Column(db.String(32))			# 邮箱
 	bill_no = db.Column(db.String(32))			# 发票编号
 	pub_date = db.Column(db.DateTime, default=datetime.now)	# 开票日期
 	enterprise_name = db.Column(db.String(32))			# 企业名称
