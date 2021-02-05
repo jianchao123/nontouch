@@ -122,7 +122,7 @@ def rsa_pkcs1_decrypt(ciphertext, public_key):
 
 if __name__ == '__main__':
     # RSA私钥加密
-    data = "mysql_user=18582510916&time=1556159837&sign=bac79d79038209e983c8c158beec8ddc673db34b"
+    data = "user=18582510916&time=1556159837&sign=bac79d79038209e983c8c158beec8ddc673db34b"
     private_key_path = "../docs/rsa_private_key.pem"
     private_key = read_key(private_key_path, "private")
     ciphertext = rsa_pkcs1_encrypt(data, private_key)

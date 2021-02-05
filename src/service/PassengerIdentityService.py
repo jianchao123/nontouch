@@ -40,7 +40,7 @@ class PassengerIdentityService(object):
             d['user_id'] = user.id
             d['identity_id'] = identity.id
             d['identity_name'] = identity.name
-            d['status'] = identity.status
+            d['status'] = pi.status
             d['section_begin_time'] = \
                 pi.section_begin_time.strftime('%Y-%m-%d %H:%M:%S')
             d['end_time'] = pi.end_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -54,18 +54,23 @@ class PassengerIdentityService(object):
         return {'count': count, 'results': results}
 
     @staticmethod
-    def passenger_identity_delete(pk):
+    def passenger_identity_delete(pks):
         """
         """
         db.session.commit()
-        pi = db.session.query(PassengerIdentity).filter(
-            PassengerIdentity.id == pk).first()
-        if pi.status not in (1, 2):
+        ids = [int(row) for row in pks.split(",")]
+        cnt = db.session.query(PassengerIdentity).filter(
+            PassengerIdentity.id.in_(ids),
+            PassengerIdentity.status.in_([1, 2])).count()
+        if len(ids) > cnt:
             return -10
-        try:
+        for pid in ids:
+            pi = db.session.query(PassengerIdentity).filter(
+                PassengerIdentity.id == pid).first()
             pi.status = 10
+        try:
             db.session.commit()
-            return {'id': pk}
+            return {'id': 0}
         except SQLAlchemyError:
             db.session.rollback()
             return -2

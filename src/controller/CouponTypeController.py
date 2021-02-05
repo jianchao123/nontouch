@@ -231,6 +231,9 @@ responses:
     use_end_time = args['use_end_time']
     volume = args['volume']
 
+    give_out_end_time = give_out_end_time.split(" ")[0] + " 23:59:59"
+    use_end_time = use_end_time.split(" ")[0] + " 23:59:59"
+
     ret = CouponTypeService.coupon_type_add(
         company_id, condition, content, face_value,
         give_out_begin_time, give_out_end_time,

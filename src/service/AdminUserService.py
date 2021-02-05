@@ -21,7 +21,7 @@ class AdminUserService(object):
 
     TOKEN_ID_KEY = 'hash:token.id:{}'
     INVALID_USER_ID = -1
-    USER_OPERATIONS = 'mysql_user:operations:{}'
+    USER_OPERATIONS = 'user:operations:{}'
 
     @staticmethod
     def admin_user_list(company_id, offset, limit, username):

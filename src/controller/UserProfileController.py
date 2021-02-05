@@ -25,7 +25,7 @@ bp = Blueprint('UserProfileController', __name__)
 url_prefix = '/api_backend/v1'
 
 
-@bp.route('/mysql_user/list', methods=['GET'])
+@bp.route('/user/list', methods=['GET'])
 @get_require_check_with_permissions([])
 def app_user_list(user_id, company_id, args):
     """
@@ -107,7 +107,7 @@ def app_user_list(user_id, company_id, args):
     return ret
 
 
-@bp.route('/mysql_user/deposit/<int:pk>', methods=['POST'])
+@bp.route('/user/deposit/<int:pk>', methods=['POST'])
 @post_require_check_with_permissions([])
 def app_user_change(user_id, company_id, args, pk):
     """
@@ -163,7 +163,7 @@ def app_user_change(user_id, company_id, args, pk):
     return {}
 
 
-@bp.route('/mysql_user/disable/<int:pk>', methods=['POST'])
+@bp.route('/user/disable/<int:pk>', methods=['POST'])
 @post_require_check_with_permissions([])
 def app_user_disable(user_id, company_id, args, pk):
     """
@@ -209,7 +209,7 @@ def app_user_disable(user_id, company_id, args, pk):
     return {'id': ret}
 
 
-@bp.route('/mysql_user/enable/<int:pk>', methods=['POST'])
+@bp.route('/user/enable/<int:pk>', methods=['POST'])
 @post_require_check_with_permissions([])
 def app_user_enable(user_id, company_id, args, pk):
     """

@@ -19,7 +19,7 @@ from ext import cache
 class UserProfileService(object):
     TOKEN_ID_KEY = 'hash:token.id:{}'
     INVALID_USER_ID = -1
-    USER_OPERATIONS = 'mysql_user:operations:{}'
+    USER_OPERATIONS = 'user:operations:{}'
 
     @staticmethod
     def token_to_id(token):
@@ -114,7 +114,8 @@ class UserProfileService(object):
             from database.FaceImg import FaceImg
             from database.UserCoupe import UserCoupe
 
-            faces = db.session.query(FaceImg).filter(FaceImg.parent_mobile == mobile)
+            faces = db.session.query(FaceImg).filter(
+                FaceImg.baidu_user_id.like('{}%%'.format(row.mobile)))
             for face in faces:
                 sub_accounts.append({
                     "sub_account_mobile": face.baidu_user_id,
@@ -139,7 +140,6 @@ class UserProfileService(object):
                 'mobile': row.mobile,
                 'id_card': row.id_card,
                 'email': row.email,
-                'level': 'APP用户',
                 'balance': str(row.balance),
                 'date_joined': row.date_joined.strftime('%Y-%m-%d %H:%M:%S'),
                 'is_active': row.is_active,

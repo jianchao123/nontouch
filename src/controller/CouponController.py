@@ -93,7 +93,8 @@ responses:
                 description: 使用时间
 
     """
+    mobile = args.get('mobile', None)
     type_id = args.get('type_id', None)
     offset = int(args['offset'])
     limit = int(args['limit'])
-    return CouponService.coupon_list(type_id, offset, limit)
+    return CouponService.coupon_list(mobile, type_id, offset, limit)

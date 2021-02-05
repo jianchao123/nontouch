@@ -718,6 +718,8 @@ responses:
     sub_account_name = args.get('sub_account_name', None)
     ret = ClientAppService.face_image_change(
         user_id, baidu_user_id, oss_url, sub_account_name)
+    if ret == -1:
+        raise AppError(*GlobalErrorCode.OBJ_NOT_FOUND_ERROR)
     if ret == -2:
         raise AppError(*GlobalErrorCode.DB_COMMIT_ERR)
     if ret == -10:

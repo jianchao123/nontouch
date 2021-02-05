@@ -118,9 +118,9 @@ responses:
         company_id, status, identity_id, offset, limit)
 
 
-@bp.route('/passengeridentity/delete/<int:pk>', methods=['POST'])
+@bp.route('/passengeridentity/delete', methods=['POST'])
 @post_require_check_with_permissions([])
-def passenger_identity_delete_api(user_id, company_id, args, pk):
+def passenger_identity_delete_api(user_id, company_id, args):
     """
 删除乘客的身份
 删除乘客的身份，需要先登录
@@ -133,11 +133,15 @@ parameters:
     type: string
     required: true
     description: TOKEN
-  - name: PK
-    in: path
-    type: integer
+  - name: body
+    in: body
     required: true
-    description: PK 
+    schema:
+      properties:
+        pks:
+          type: string
+          required: true
+          description: id字符串 逗号分割
 
 responses:
   200:
@@ -158,7 +162,8 @@ responses:
               description: PK
 
     """
-    ret = PassengerIdentityService.passenger_identity_delete(pk)
+    pks = args['pks']
+    ret = PassengerIdentityService.passenger_identity_delete(pks)
     if ret == -2:
         raise AppError(*GlobalErrorCode.DB_COMMIT_ERR)
     if ret == -10:

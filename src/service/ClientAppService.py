@@ -41,7 +41,7 @@ class ClientAppService(object):
     MOBILE_CACHE_KEY = 'smscode:mobile:{}:{}'
     TOKEN_ID_KEY = 'hash:token.id:{}'
     INVALID_USER_ID = -1
-    USER_OPERATIONS = 'mysql_user:operations:{}'
+    USER_OPERATIONS = 'user:operations:{}'
 
     @staticmethod
     def get_user_by_mobile(mobile):
@@ -107,7 +107,7 @@ class ClientAppService(object):
         ClientAppService.login(user_obj['id'], token)
         return {
             'token': token,
-            'mysql_user': {
+            'user': {
                 'id': user_obj['id'],
                 'mobile': user_obj['mobile']
             }
@@ -266,7 +266,7 @@ class ClientAppService(object):
         if user.balance == Decimal(str(0.0)):
             raise -10  # APP_USER_BALANCE_INSUFFICIENT
         data = defaultdict()
-        data['mysql_user'] = str(user.mobile)
+        data['user'] = str(user.mobile)
         result = scan.add_sign(data)
         return {'qrcode': result}
 
@@ -394,6 +394,8 @@ class ClientAppService(object):
         db.session.commit()
         instance = db.session.query(FaceImg).filter(
             FaceImg.baidu_user_id == baidu_user_id).first()
+        if not instance:
+            return -1
 
         try:
             # 向百度更新人脸
@@ -602,7 +604,7 @@ class ClientAppService(object):
     def user_recharge_add(user_id, name, pay_type, amount,
                           to_whom, remote_addr, is_mini):
         """统一下单
-        'mysql_user', 'name', 'amount', 'pay_type', body, to_whom
+        'user', 'name', 'amount', 'pay_type', body, to_whom
 
         """
         print name, pay_type, amount, to_whom, remote_addr, is_mini
@@ -627,7 +629,7 @@ class ClientAppService(object):
             db.session.add(recharge)
             db.session.commit()
 
-            data = {'mysql_user': user_id, 'name': name.encode('utf-8'),
+            data = {'user': user_id, 'name': name.encode('utf-8'),
                     'pay_type': pay_type, 'amount': amount, 'body': '',
                     'to_whom': to_whom, 'order_no': recharge.order_no}
             # 支付宝
@@ -663,7 +665,7 @@ class ClientAppService(object):
         if instance.status != 1:
             return -10  # ORDER_UNABLE_RECALL
 
-        data = {'mysql_user': instance.user_id, 'name': instance.name.encode('utf-8'),
+        data = {'user': instance.user_id, 'name': instance.name.encode('utf-8'),
                 'amount': instance.amount, 'body': instance.body,
                 'to_whom': instance.to_whom, 'pay_type': instance.pay_type,
                 'order_no': instance.order_no}
@@ -978,7 +980,7 @@ class ClientAppService(object):
             d['user_mobile'] = user.mobile
             d['user_signup_time'] = user.date_joined.strftime(
                 '%Y-%m-%d %H:%M:%S')
-            d['mysql_user'] = user.id
+            d['user'] = user.id
             d['user_balance'] = str(user.balance)
             d['upload_imgs'] = cert.upload_imgs
             d['status'] = cert.status

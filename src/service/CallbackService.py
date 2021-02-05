@@ -136,7 +136,6 @@ class CallbackService(object):
             order.station = data['station']
         order.scan_time = data['scan_time']
         take_bus_amount = Decimal(str(data['amount']))
-        print(str(data["company_id"]) + " " + str(user.id))
         # 身份
         from database.Identity import Identity
         identity_objs = db.session.query(PassengerIdentity, Identity).join(
@@ -148,7 +147,8 @@ class CallbackService(object):
 
         coupon = None
         user_coupon = None
-        if identity_objs and identity_objs[0] and identity_objs[1] and not sub_account:
+        if identity_objs and identity_objs[0] \
+                and identity_objs[1] and not sub_account:
             passenger_identity = identity_objs[0]
             identity = identity_objs[1]
             # 免费次数
@@ -187,11 +187,8 @@ class CallbackService(object):
             if objs and objs[0] and objs[1]:
                 coupon = objs[0]
                 user_coupon = objs[1]
-                print "=========================AA============================"
-                print coupon, user_coupon
 
                 face_value = coupon.face_value
-                print str(take_bus_amount) + " " + str(face_value)
                 order.real_amount = take_bus_amount - face_value
                 order.amount = take_bus_amount
                 order.discount = face_value
@@ -223,10 +220,7 @@ class CallbackService(object):
             order.sub_account = user.mobile
 
         # 扣款
-        print "---------------------------------1."
-        print order.real_amount
         if order.real_amount:
-            print "------------------------------2."
             user.balance -= Decimal(str(order.real_amount))
         order.status = 2
         order.create_time = datetime.now()

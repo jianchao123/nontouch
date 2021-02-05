@@ -59,6 +59,7 @@ class CertificationService(object):
             d['identity_name'] = identity.name
             d['identity_id'] = identity.id
             d['discount_rate'] = str(identity.discount_rate)
+            # 状态为已通过
             if cert.status == 2:
                 pi = db.session.query(PassengerIdentity).filter(
                     PassengerIdentity.certification_id == cert.id).first()
@@ -67,7 +68,19 @@ class CertificationService(object):
                 d['end_time'] = pi.end_time
                 d['date_of_approval'] = cert.date_of_approval.strftime(
                     '%Y-%m-%d %H:%M:%S')
-                d['verifier_name'] = admin.username
+                d['auditor'] = admin.username
+                print admin.username
+            elif cert.status == 3:
+                admin = db.session.query(AdminUser).filter(
+                    AdminUser.id == cert.verifier_id).first()
+                d['end_time'] = ""
+                d['date_of_approval'] = cert.date_of_approval.strftime(
+                    '%Y-%m-%d %H:%M:%S')
+                d['auditor'] = admin.username
+            else:
+                d['end_time'] = ""
+                d['date_of_approval'] = ""
+                d['auditor'] = ""
 
             results.append(d)
         return {'count': count, 'results': results}

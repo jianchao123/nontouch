@@ -47,7 +47,8 @@ class IdentityService(object):
         if not identity:
             return -1
         pi_count = db.session.query(PassengerIdentity).filter(
-            PassengerIdentity.identity_id == pk).count()
+            PassengerIdentity.identity_id == pk).filter(
+            PassengerIdentity.status == 1).count()
         if pi_count:
             return -10
 
