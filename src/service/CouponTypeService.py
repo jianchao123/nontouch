@@ -16,6 +16,7 @@ class CouponTypeService(object):
 
     @staticmethod
     def coupon_type_list(company_id, offset, limit):
+        db.session.commit()
         query = db.session.query(CouponType).filter(
             CouponType.company_id == company_id).filter(CouponType.status != 10)
         count = query.count()
@@ -56,6 +57,7 @@ class CouponTypeService(object):
                     str(Decimal(str(row.has_been_used_volume)) * row.face_value)
             }
             d['statistics'] = statistics
+            d['created_at'] = row.create_time.strftime('%Y-%m-%d %H:%M:%S')
             results.append(d)
         return {'count': count, 'results': results}
 
@@ -64,6 +66,7 @@ class CouponTypeService(object):
                         give_out_begin_time, give_out_end_time, img_url,
                         is_online, link, name,
                         use_begin_time, use_end_time, volume):
+        db.session.commit()
         volume = int(volume)
         try:
             if use_end_time <= use_begin_time:
@@ -78,7 +81,7 @@ class CouponTypeService(object):
                 return -13  # 邀请新用户领取优惠券活动,数量必须为偶数
             if condition == 2:
                 # 1, "未开始"), (2, "活动中"), (3, "活动结束"), (10, "删除"
-                count = CouponType.query.filter(
+                count = CouponType.query.coupon_type_addfilter(
                     CouponType.condition == 2,
                     CouponType.status.in_([1, 2])).count()
                 if count:
@@ -135,6 +138,7 @@ class CouponTypeService(object):
 
     @staticmethod
     def coupon_type_change(pk, content, img_url, is_online, link, name):
+        db.session.commit()
         coupon_type = CouponType.query.filter(
             CouponType.id == pk).first()
         if not coupon_type:
@@ -160,6 +164,7 @@ class CouponTypeService(object):
         下线活动
         下线活动只是不能继续发放优惠券了,已发放的优惠券还是可以继续使用
         """
+        db.session.commit()
         coupon_type = db.session.query(CouponType).filter(
             CouponType.id == pk).first()
         if not coupon_type:
@@ -172,6 +177,7 @@ class CouponTypeService(object):
         coupon_type.status = 3          # 活动结束
         try:
             db.session.commit()
+            return {}
         except SQLAlchemyError:
             db.session.rollback()
         finally:
@@ -183,6 +189,7 @@ class CouponTypeService(object):
         删除活动
         删除活动并不删除这次活动发放的券码,券码还是有效且可以使用
         """
+        db.session.commit()
         coupon_type = db.session.query(CouponType).filter(
             CouponType.id == pk).first()
         if not coupon_type:

@@ -528,7 +528,7 @@ def user_login(args):
                 token:
                   type: string
                   description: token串,登录的时候放到header
-                user:
+                mysql_user:
                   type: object
                   properties:
                     id:
@@ -558,7 +558,7 @@ def user_login(args):
 
     return {
         'token': token,
-        'user': {
+        'mysql_user': {
             'id': user_obj['id'],
             'username': user_obj['username']
         }

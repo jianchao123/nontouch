@@ -25,10 +25,11 @@ class MiniService(object):
 
     TOKEN_ID_KEY = 'hash:token.id:{}'
     INVALID_USER_ID = -1
-    USER_OPERATIONS = 'user:operations:{}'
+    USER_OPERATIONS = 'mysql_user:operations:{}'
 
     @staticmethod
     def get_login_status(code):
+        db.session.commit()
         wx_login = WeixinLogin(conf.config['MINI_APP_ID'],
                                conf.config['MINI_APP_SECRET'])
         try:
@@ -59,6 +60,7 @@ class MiniService(object):
 
     @staticmethod
     def sign_up_user(encrypted_data, iv, token):
+        db.session.commit()
         mapping = cache.hmget(token, "open_id", "session_key")
         if not mapping[0] or not mapping[1]:
             return -10
@@ -116,7 +118,7 @@ class MiniService(object):
         """
         上传到百度
         """
-
+        db.session.commit()
         rgn_client = AipFace(conf.config['BAIDU_APP_ID'],
                              conf.config['BAIDU_API_KEY'],
                              conf.config['BAIDU_SECRET_KEY'])

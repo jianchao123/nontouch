@@ -15,36 +15,31 @@ if env == "TEST":
     mysql_passwd = "kIhHAWexFy7pU8qM"
 
     log_path = "/data/logs/{}/msgqueue".format(project_name)
-    user = "root"
+    mysql_user = "root"
+    RedisDb = 0
 
 elif env == "DEV":
     mysql_host = '127.0.0.1'
     mysql_passwd = "kIhHAWexFy7pU8qM"
 
     log_path = project_dir + "/logs/msgqueue"
-    user = "root"
+    mysql_user = "root"
 
-    Productkey = 'a1vperyb2Cg'
-    ProductHost = 'a1vperyb2Cg.iot-as-mqtt.cn-shanghai.aliyuncs.com'
-    ProductSecret = 'jqSbrJZ11baH1aAH'
-    DeviceSecret = 'bmq66tsx0OGju0CGqeYjzCTYlwA454j0'  # 'CVAp97tAUayElJwRbiXAiTgcoCZZAX1j'
-
-    OSSDomain = 'https://wgxing-device.oss-cn-beijing.aliyuncs.com'
+    OSSDomain = 'https://wgxing-dev.oss-cn-beijing.aliyuncs.com'
     OSSAccessKeyId = 'LTAIWE5CGeOiozf7'
     OSSAccessKeySecret = 'IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj'
-    OSSEndpoint = 'http://oss-cn-beijing.aliyuncs.com'
-    OSSBucketName = 'wgxing-device'
+    OSSEndpoint = 'oss-cn-beijing.aliyuncs.com'
+    OSSBucketName = 'wgxing-dev'
 
-    MNSEndpoint = 'http://1162097573951650.mns.cn-shanghai.aliyuncs.com/'
-    MNSAccessKeyId = 'LTAI4GL6gtEc4bnmj82yQ9wc'
-    MNSAccessKeySecret = 'vhuBLJpqlOsSisnuUQ1xvE02GCXhIC'
+    # 公交项目使用redis db3
+    RedisDb = 3
 else:
 
     mysql_host = '127.0.0.1'
     mysql_passwd = "kIhHAWexFy7pU8qM"
 
     log_path = "/data/logs/{}/msgqueue".format(project_name)
-    user = "root"
+    mysql_user = "root"
 
     Productkey = 'a1agDqZJSpQ'
     ProductHost = 'a1agDqZJSpQ.iot-as-mqtt.cn-shanghai.aliyuncs.com'
@@ -60,10 +55,10 @@ else:
     MNSEndpoint = 'http://1083695407857925.mns.cn-shanghai.aliyuncs.com/'
     MNSAccessKeyId = 'LTAI4GHswktoXpmVTnYnkEnf'
     MNSAccessKeySecret = 'oW4jtV1FEJzcb8BnSFhhlIpSjL0E6G'
+    RedisDb = 0
 
-
-redis_conf = dict(host="127.0.0.1", port=6379, db=0, decode_responses=True)
-mysql_conf = dict(host=mysql_host, db="wuganxing_1", port=3306, user=user,
+redis_conf = dict(host="127.0.0.1", port=6379, db=RedisDb, decode_responses=True)
+mysql_conf = dict(host=mysql_host, db="wuganxing_1", port=3306, user=mysql_user,
                   passwd=mysql_passwd, charset="utf8")
 
 logger = get_logger(log_path)

@@ -20,6 +20,7 @@ class SettlementService(object):
     @staticmethod
     def settlement_list(company_id, offset, limit):
         """结算列表"""
+        db.session.commit()
         query = db.session.query(Settlement)
         # 不是无感行
         if company_id != 1:
@@ -207,6 +208,7 @@ class SettlementService(object):
     @staticmethod
     def settlement_filtrate(start_time_str, end_time_str, company_id, offset, limit):
         """结算筛选"""
+        db.session.commit()
         from datetime import datetime
         start_time = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M:%S')
         end_time = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')

@@ -705,7 +705,7 @@ class MNSClient(object):
 #----------------------internal-------------------------------------------------------------------#
     def build_header(self, req, req_inter):
         if req.request_id is not None:
-            req_inter.header["x-mns-user-request-id"] = req.request_id
+            req_inter.header["x-mns-mysql_user-request-id"] = req.request_id
         if self.http.is_keep_alive():
             req_inter.header["Connection"] = "Keep-Alive"
         if req_inter.data != "":
@@ -716,7 +716,7 @@ class MNSClient(object):
         req_inter.header["x-mns-version"] = self.version
         req_inter.header["host"] = self.host
         req_inter.header["date"] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        req_inter.header["user-agent"] = "aliyun-sdk-python/%s(%s/%s;%s)" % \
+        req_inter.header["mysql_user-agent"] = "aliyun-sdk-python/%s(%s/%s;%s)" % \
                                          (pkg_info.version, platform.system(), platform.release(), platform.python_version())
         req_inter.header["Authorization"] = self.get_signature(req_inter.method, req_inter.header, req_inter.uri)
         if self.security_token != "":

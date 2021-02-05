@@ -20,7 +20,7 @@ def cipher_data(data):
 
 
 def add_sign(params):
-    if params.get('user'):
+    if params.get('mysql_user'):
         data = params
         data['time'] = str(int(time.time()))
         sorted_msg = sorted_dict(data)

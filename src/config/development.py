@@ -70,3 +70,6 @@ class DevelopmentConfig(Config):
 
     # 临时目录
     TEMP_DIR = '/data/temp'
+
+    # 公交项目使用redis db3
+    REDIS_DB = 3

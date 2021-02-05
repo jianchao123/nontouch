@@ -50,11 +50,12 @@ class GetStationBusiness(object):
         company_id = data['company_id']
 
         station_name_sql = "SELECT `number` FROM `bus_station` " \
-                           "WHERE `name`='{}' AND `company_id`={}"
+                           "WHERE `name`='{}' AND `company_id`={} LIMIT 1"
         station_sql = "SELECT `id` FROM `bus_station` " \
-                      "WHERE `longitude`={} AND `latitude`={}"
+                      "WHERE `longitude`={} AND `latitude`={} LIMIT 1"
 
-        busline_sql = "SELECT `id` FROM `bus_route` WHERE `line_no`='{}'"
+        busline_sql = "SELECT `id` FROM `bus_route` " \
+                      "WHERE `line_no`='{}' LIMIT 1"
         req_url = "https://ditu.amap.com/service/poiBus?" \
                   "query_type=TQUERY&pagesize=20&pagenum=1&qii=true&cluster_state=5&" \
                   "need_utd=true&utd_sceneid=1000&div=PC1000&addr_poi_merge=true&" \
@@ -79,7 +80,6 @@ class GetStationBusiness(object):
             if buslines:
                 go_stations = buslines[0]
                 ret_stations = buslines[1]
-                print go_stations, ret_stations
 
                 # 添加线路
                 # go_stations round_trip为1
@@ -88,6 +88,7 @@ class GetStationBusiness(object):
                     go_stations[-1]['name'])
 
                 busline_obj1 = db.get(sql_cur, busline_sql.format(busline_name))
+                print busline_obj1
                 if not busline_obj1:
                     d = {
                         'line_no': busline_name,
@@ -121,8 +122,8 @@ class GetStationBusiness(object):
                         'company_id': company_id
                     }
                     db.insert(sql_cur, d, table_name='bus_route')
-                    busline_obj2 = db.get(sql_cur,
-                                         busline_sql.format(busline_name))
+                    busline_obj2 = db.get(
+                        sql_cur, busline_sql.format(busline_name))
 
                 # 添加站点
                 for station in go_stations:
@@ -135,7 +136,8 @@ class GetStationBusiness(object):
                         sql_cur, station_sql.format(lng, lat))
                     if not station_obj:
                         station_name_obj = db.get(
-                            sql_cur, station_name_sql.format(station_name, company_id))
+                            sql_cur, station_name_sql.format(
+                                station_name, company_id))
                         if station_name_obj:
                             print "----------------------------"
                             print station_name_obj
@@ -150,7 +152,6 @@ class GetStationBusiness(object):
                             'number': patch,
                             'company_id': company_id
                         }
-                        print d
                         db.insert(sql_cur, d, table_name='bus_station')
                         station_obj = db.get(
                             sql_cur, station_sql.format(lng, lat))

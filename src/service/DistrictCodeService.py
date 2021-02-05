@@ -8,6 +8,7 @@ class DistrictCodeService(object):
 
     @staticmethod
     def district_code_list():
+        db.session.commit()
         result = []
         queryset = db.session.query(DistrictCode).all()
         for q in queryset:

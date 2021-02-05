@@ -275,3 +275,18 @@ responses:
     if ret == -15:
         raise AppError(*GlobalErrorCode.DB_COMMIT_ERR)
     return ret
+
+
+@bp.route('/gps/', methods=['POST'])
+@post_require_check([])
+def gps_callback(args):
+    """
+    gps
+    """
+    data = request.values.to_dict()
+    device_no = data["device_no"]
+    longitude = data["longitude"]
+    latitude = data["latitude"]
+    timestamp = data['timestamp']
+    CallbackService.gps_callback(device_no, longitude, latitude, timestamp)
+    return {}

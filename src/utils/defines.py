@@ -62,7 +62,7 @@ class SubErrorCode(object):
     APP_USER_IN_BAIDU_NOT_FOUND = (200056, u"用户没有在百度人脸库找到")
 
     APP_COUPON_STATUS_ERR = (200056, u"优惠券状态错误")
-    APP_COUPON_ACTIVITY_NOT_STARTING = (200057, u"活动还没有开始")
+    APP_COUPON_ACTIVITY_NOT_STARTING = (200057, u"活动已结束")
     APP_CERT_REPETITION_REGISTER_FACE = \
         (200058, u"不能重复注册人脸,请先删除以前的子账户或关闭账号")
     APP_USER_ALREADY_REGISTERED_FACE = (200059, u"用户已经注册人脸")
@@ -125,3 +125,9 @@ ENTERPRISE_LEVEL = dict(
     parent=1,
     child=2,
 )
+
+
+class RedisKey(object):
+
+    DEVICE_GPS_HASH = "DEVICE_GPS_HASH"
+    DEVICE_TIMESTAMP_HASH = "DEVICE_TIMESTAMP_HASH"

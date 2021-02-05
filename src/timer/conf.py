@@ -29,7 +29,8 @@ elif env == "DEV":
     print log_path
     url = ""
 
-    redis_conf = dict(host="127.0.0.1", port=6379, db=0, decode_responses=True)
+    # 公交项目使用redis db3
+    redis_conf = dict(host="127.0.0.1", port=6379, db=3, decode_responses=True)
 
     mysql_conf = dict(host="127.0.0.1", port=3306, db="wuganxing_1",
                       user="root", passwd="kIhHAWexFy7pU8qM", charset="utf8")

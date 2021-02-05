@@ -140,7 +140,7 @@ class RequestInternal:
         self.data = data
 
     def get_req_id(self):
-        return self.header.get("x-mns-user-request-id")
+        return self.header.get("x-mns-mysql_user-request-id")
 
     def __str__(self):
         return "Method: %s\nUri: %s\nHeader: %s\nData: %s\n" % \

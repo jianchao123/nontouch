@@ -109,7 +109,7 @@ class CertificationService(object):
                 pi.user_id = user_id
                 pi.identity_id = identity.id
                 pi.certification_id = instance.id
-                pi.status = instance.status
+                pi.status = 1
                 pi.discount_rate = Decimal(str(discount_rate))
                 pi.end_time = end_time
                 pi.section_begin_time = start_time

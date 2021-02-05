@@ -21,7 +21,7 @@ class AdminUserService(object):
 
     TOKEN_ID_KEY = 'hash:token.id:{}'
     INVALID_USER_ID = -1
-    USER_OPERATIONS = 'user:operations:{}'
+    USER_OPERATIONS = 'mysql_user:operations:{}'
 
     @staticmethod
     def admin_user_list(company_id, offset, limit, username):
@@ -77,7 +77,7 @@ class AdminUserService(object):
          permission
         [{"permission_id":1,"permission_name":"增加广告","group":"广告"}]
         """
-
+        db.session.commit()
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
         if AdminUserService.check_commit_permission(
@@ -132,6 +132,7 @@ class AdminUserService(object):
         """
         禁用或启用
         """
+        db.session.commit()
         user = db.session.query(AdminUser).filter(
             AdminUser.id == pk).first()
         if not user:

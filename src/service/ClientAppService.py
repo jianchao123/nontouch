@@ -41,7 +41,7 @@ class ClientAppService(object):
     MOBILE_CACHE_KEY = 'smscode:mobile:{}:{}'
     TOKEN_ID_KEY = 'hash:token.id:{}'
     INVALID_USER_ID = -1
-    USER_OPERATIONS = 'user:operations:{}'
+    USER_OPERATIONS = 'mysql_user:operations:{}'
 
     @staticmethod
     def get_user_by_mobile(mobile):
@@ -107,7 +107,7 @@ class ClientAppService(object):
         ClientAppService.login(user_obj['id'], token)
         return {
             'token': token,
-            'user': {
+            'mysql_user': {
                 'id': user_obj['id'],
                 'mobile': user_obj['mobile']
             }
@@ -266,7 +266,7 @@ class ClientAppService(object):
         if user.balance == Decimal(str(0.0)):
             raise -10  # APP_USER_BALANCE_INSUFFICIENT
         data = defaultdict()
-        data['user'] = str(user.mobile)
+        data['mysql_user'] = str(user.mobile)
         result = scan.add_sign(data)
         return {'qrcode': result}
 
@@ -313,7 +313,8 @@ class ClientAppService(object):
         coupon_type = db.session.query(CouponType).filter(
             CouponType.id == coupon.type_id).first()
         if not (coupon_type.give_out_begin_time < cur_time <
-                coupon_type.give_out_end_time):
+                coupon_type.give_out_end_time) or coupon_type.status != 2 or \
+                not coupon_type.is_online:
             return -11  # COUPON_ACTIVITY_NOT_STARTING
 
         try:
@@ -601,7 +602,7 @@ class ClientAppService(object):
     def user_recharge_add(user_id, name, pay_type, amount,
                           to_whom, remote_addr, is_mini):
         """统一下单
-        'user', 'name', 'amount', 'pay_type', body, to_whom
+        'mysql_user', 'name', 'amount', 'pay_type', body, to_whom
 
         """
         print name, pay_type, amount, to_whom, remote_addr, is_mini
@@ -626,7 +627,7 @@ class ClientAppService(object):
             db.session.add(recharge)
             db.session.commit()
 
-            data = {'user': user_id, 'name': name.encode('utf-8'),
+            data = {'mysql_user': user_id, 'name': name.encode('utf-8'),
                     'pay_type': pay_type, 'amount': amount, 'body': '',
                     'to_whom': to_whom, 'order_no': recharge.order_no}
             # 支付宝
@@ -662,7 +663,7 @@ class ClientAppService(object):
         if instance.status != 1:
             return -10  # ORDER_UNABLE_RECALL
 
-        data = {'user': instance.user_id, 'name': instance.name.encode('utf-8'),
+        data = {'mysql_user': instance.user_id, 'name': instance.name.encode('utf-8'),
                 'amount': instance.amount, 'body': instance.body,
                 'to_whom': instance.to_whom, 'pay_type': instance.pay_type,
                 'order_no': instance.order_no}
@@ -795,7 +796,7 @@ class ClientAppService(object):
     def notice_list(start_time_str):
         db.session.commit()
         from database.Notice import Notice
-        query = db.session.query(Notice)
+        query = db.session.query(Notice).filter(Notice.is_active == 1)
         if start_time_str:
             start_time_raw = datetime.strptime(start_time_str,
                                                '%Y-%m-%d %H:%M:%S')
@@ -977,7 +978,7 @@ class ClientAppService(object):
             d['user_mobile'] = user.mobile
             d['user_signup_time'] = user.date_joined.strftime(
                 '%Y-%m-%d %H:%M:%S')
-            d['user'] = user.id
+            d['mysql_user'] = user.id
             d['user_balance'] = str(user.balance)
             d['upload_imgs'] = cert.upload_imgs
             d['status'] = cert.status
@@ -994,7 +995,7 @@ class ClientAppService(object):
 
     @staticmethod
     def certification_commit(company_id, identity_id, user_id, upload_imgs):
-
+        db.session.commit()
         count = db.session.query(Certification).join(
             PassengerIdentity,
             PassengerIdentity.certification_id == Certification.id).filter(
@@ -1025,6 +1026,7 @@ class ClientAppService(object):
 
     @staticmethod
     def cert_query_company(user_id):
+        db.session.commit()
         user = UserProfile.query.filter(UserProfile.id == user_id).first()
         companies = Company.query.filter(Company.status == 1).all()  # 启用中的公司
         d = []
@@ -1072,7 +1074,7 @@ class ClientAppService(object):
             ----enterprise_phone
             ----recharge_pks 充值记录的id字符串,逗号拼接
         """
-
+        db.session.commit()
         bill = Bill()
         bill.headline = headline
         bill.headline_type = headline_type

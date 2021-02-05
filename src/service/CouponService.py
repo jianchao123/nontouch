@@ -11,6 +11,7 @@ class CouponService(object):
 
     @staticmethod
     def coupon_list(type_id, offset, limit):
+        db.session.commit()
         query = db.session.query(Coupon, CouponType.name).join(
             CouponType, CouponType.id == Coupon.type_id)
         if type_id:
@@ -31,8 +32,9 @@ class CouponService(object):
                 user = objs[1]
                 d['get_time'] = user_coupe.get_time.strftime(
                     '%Y-%m-%d %H:%M:%S')
-                d['use_time'] = user_coupe.use_time.strftime(
-                    '%Y-%m-%d %H:%M:%S')
+                if user_coupe.use_time:
+                    d['use_time'] = user_coupe.use_time.strftime(
+                        '%Y-%m-%d %H:%M:%S')
                 d['nickname'] = user.nickname
             d['id'] = coupon.id
             d['code'] = coupon.code

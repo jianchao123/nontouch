@@ -31,6 +31,6 @@ class CouponType(db.Model):
 	link = db.Column(db.String(128))				# 优惠券活动链接
 	condition = db.Column(db.Integer)				# 领取优惠券的条件
 	status = db.Column(db.Integer)
-	is_online = db.Column(db.Integer)				# 是否上线
+	is_online = db.Column(db.Integer)				# 是否已上线
 	create_time = db.Column(db.DateTime, default=datetime.now)
 	company_id = db.Column(db.Integer)				# owner_id

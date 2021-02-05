@@ -1,29 +1,25 @@
 # coding:utf-8
-try:
-    import time
-    import json
-    from datetime import datetime
-    from decimal import Decimal
-    from sqlalchemy import func
-    from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-    from sqlalchemy.exc import SQLAlchemyError
-    from database.db import db
-    from database.AdminUser import AdminUser
-    from database.UserPermissions import UserPermissions
-    from database.Permissions import Permissions
-    from database.Recharge import Recharge
-    from database.UserProfile import UserProfile
-    from collections import defaultdict
-    from ext import cache
-except:
-    import traceback
-    print traceback.format_exc()
+import time
+from datetime import datetime
+from decimal import Decimal
+from sqlalchemy import func
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.exc import SQLAlchemyError
+from database.db import db
+from database.AdminUser import AdminUser
+from database.UserPermissions import UserPermissions
+from database.Permissions import Permissions
+from database.Recharge import Recharge
+from database.UserProfile import UserProfile
+from database.Coupon import Coupon
+from collections import defaultdict
+from ext import cache
 
 
 class UserProfileService(object):
     TOKEN_ID_KEY = 'hash:token.id:{}'
     INVALID_USER_ID = -1
-    USER_OPERATIONS = 'user:operations:{}'
+    USER_OPERATIONS = 'mysql_user:operations:{}'
 
     @staticmethod
     def token_to_id(token):
@@ -102,6 +98,7 @@ class UserProfileService(object):
     @staticmethod
     def app_user_list(company_id, mobile, offset, limit):
         """APP用户列表"""
+        db.session.commit()
         query = db.session.query(UserProfile).filter(
             UserProfile.company_id == company_id)
         if mobile:
@@ -129,7 +126,8 @@ class UserProfileService(object):
             user_coupe_set = db.session.query(UserCoupe).filter(
                 UserCoupe.user_id == row.id)
             for user_coupon in user_coupe_set:
-                coupon = user_coupon.coupon
+                coupon = db.session.query(Coupon).filter(
+                    Coupon.id == user_coupon.coupon_id).first()
                 user_coupes.append({
                     "face_value": str(coupon.face_value),
                     "code": coupon.code
@@ -154,6 +152,7 @@ class UserProfileService(object):
     @staticmethod
     def app_user_update(pk, company_id, is_active, balance):
         """修改APP用户"""
+        db.session.commit()
         user = db.session.query(UserProfile).filter(
             UserProfile.id == pk).first()
         if not user:

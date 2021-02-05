@@ -152,8 +152,9 @@ class CompanyService(object):
             from msgqueue import producer
             from database.DistrictCode import DistrictCode
             districtcode = db.session.query(DistrictCode).filter(
-                DistrictCode.id==area_id).first()
-            producer.generate_get_station_msg(line_nos, districtcode.ad, company_id)
+                DistrictCode.id == area_id).first()
+            producer.generate_get_station_msg(
+                line_nos, districtcode.ad, new_company_id)
         except SQLAlchemyError:
             db.session.rollback()
             return -2

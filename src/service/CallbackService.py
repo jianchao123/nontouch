@@ -5,9 +5,7 @@ from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_
 
-from database.db import db
 from database.Recharge import Recharge
-from database.UserProfile import UserProfile
 from database.BusCar import BusCar
 from database.BusRoute import BusRoute
 from database.FaceImg import FaceImg
@@ -17,10 +15,9 @@ from database.Order import Order
 from database.UserCoupe import UserCoupe
 from database.PassengerIdentity import PassengerIdentity
 from database.Coupon import Coupon
-from database.CouponType import CouponType
 from database.db import db
-from utils import pay
 from utils import common
+from utils.defines import RedisKey
 from ext import cache
 
 
@@ -177,18 +174,21 @@ class CallbackService(object):
         else:
 
             # 该用户是否有优惠券
-            objs = db.session.query(UserCoupe, Coupon).join(
-                Coupon, Coupon.id == UserCoupe.coupon_id).join(
-                CouponType, CouponType.id == Coupon.type_id).filter(
+            objs = db.session.query(Coupon, UserCoupe).join(
+                UserCoupe, UserCoupe.coupon_id == Coupon.id).filter(
                 and_(UserCoupe.user_id == user.id,
-                     CouponType.face_value <= take_bus_amount,
-                     CouponType.status == 2)).order_by(
-                CouponType.face_value.desc(),
-                CouponType.use_end_time.desc()).first()
+                     Coupon.face_value <= take_bus_amount,
+                     Coupon.status == 2,
+                     Coupon.use_begin_time < datetime.now(),
+                     Coupon.use_end_time > datetime.now())).order_by(
+                Coupon.face_value.desc(),
+                Coupon.use_end_time.desc()).first()
 
             if objs and objs[0] and objs[1]:
-                user_coupon = objs[0]
-                coupon = objs[1]
+                coupon = objs[0]
+                user_coupon = objs[1]
+                print "=========================AA============================"
+                print coupon, user_coupon
 
                 face_value = coupon.face_value
                 print str(take_bus_amount) + " " + str(face_value)
@@ -294,6 +294,10 @@ class CallbackService(object):
         if rds_v:
             return -11
 
+        # 写入rds
+        cache.set(k, 1)
+        cache.expire(k, 1 * 60)
+
         if sub_account:
             face_img_obj = db.session.query(FaceImg).filter(
                 FaceImg.baidu_user_id == sub_account).first()
@@ -315,7 +319,7 @@ class CallbackService(object):
         # 创建订单,扣款
         order_ret = CallbackService.create_order(
             userprofile, order_params, verify_type, sub_account)
-        if order_ret == -1: # 余额不足
+        if order_ret == -1:     # 余额不足
             return -14
         elif order_ret == -2:   # 提交失败
             return -15
@@ -323,10 +327,7 @@ class CallbackService(object):
         ret_data = {"mobile": user_mobile,
                     "amounts": str(user_amounts)}
 
-        # 写入rds
-        cache.set(k, 1)
-        cache.expire(k, 1 * 60)
-        print str(ret_data)
+
         return ret_data
 
     @staticmethod
@@ -399,3 +400,11 @@ class CallbackService(object):
         ret_data = {"mobile": userprofile.mobile,
                     "amounts": str(userprofile.balance)}
         return ret_data
+
+    @staticmethod
+    def gps_callback(device_no, lng, lat, timestamp):
+        rds_conn = cache
+        rds_conn.hset(
+            RedisKey.DEVICE_GPS_HASH, device_no, str(lng) + "," + str(lat))
+        rds_conn.hset(
+            RedisKey.DEVICE_TIMESTAMP_HASH, device_no, str(int(timestamp)))
