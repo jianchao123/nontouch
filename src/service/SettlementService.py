@@ -26,7 +26,7 @@ class SettlementService(object):
         if company_id != 1:
             query = query.filter(Settlement.company_id == company_id)
         count = query.count()
-        sets = query.offset(offset).limit(limit)
+        sets = query.order_by(Settlement.id.desc()).offset(offset).limit(limit)
         results = []
         for row in sets:
             company_id = row.company_id
@@ -116,13 +116,16 @@ class SettlementService(object):
         company = db.session.query(Company).filter(
             Company.id == company_pk).first()
 
-        start_time = start_time.strptime('%Y-%m-%d')
-        end_time = end_time.strptime('%Y-%m-%d')
+        from datetime import datetime
+        from datetime import timedelta
+        start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+        end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+        end_time += timedelta(days=1)
         sets = db.session.query(Order, UserProfile, Company).join(
             UserProfile, UserProfile.id == Order.user_id).join(
             Company, Company.id == Order.company_id).filter(
             and_(db.cast(Order.create_time, db.DATE) >= db.cast(start_time, db.DATE),
-                 db.cast(Order.create_time, db.DATE) <= db.cast(end_time, db.DATE),
+                 db.cast(Order.create_time, db.DATE) < db.cast(end_time, db.DATE),
                  Order.company_id == company_pk,
                  Order.status == 2
                  )).all()
@@ -133,16 +136,11 @@ class SettlementService(object):
             order = row[0]
             user = row[1]
             company = row[2]
-
-            data_details.append({
-                'id': order.id,
-                'order_no': order.order_no,
-                'create_time': order.create_time.strftime('%Y-%m-%d %H:%M:%S'),
-                'user_mobile': user.mobile,
-                'company_name': company.name,
-                'amount': order.amount,
-                'status': u'成功'
-            })
+            data_details.append(
+                [order.id, str(order.order_no),
+                 order.create_time.strftime('%Y-%m-%d %H:%M:%S'),
+                 user.mobile, company.name, order.amount, u"成功"]
+            )
             total_amount += order.amount
 
         settlement = Settlement()
@@ -165,7 +163,7 @@ class SettlementService(object):
             'header': [u'创建时间', u'订单开始时间', u'订单结束时间', u'支付状态',
                        u'公司名称', u'订单总金额'],
             'sheet_name': u'汇总',
-            'data': [[settlement.create_time.strftime('%Y-%m-%d'),
+            'data': [[datetime.now().strftime('%Y-%m-%d'),
                       settlement.start_time.strftime('%Y-%m-%d'),
                       settlement.end_time.strftime('%Y-%m-%d'), u'成功',
                       company.name, settlement.amount]]
@@ -180,7 +178,7 @@ class SettlementService(object):
         data['file_data'].append(sheet1)
         data['file_data'].append(sheet2)
 
-        xls_oss_url = settlement.xls_oss_url = xls.export_xls(data)
+        xls_oss_url = xls.export_xls(data)
         settlement.xls_oss_url = xls_oss_url
         try:
             db.session.add(settlement)

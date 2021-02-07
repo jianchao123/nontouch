@@ -23,8 +23,11 @@ from database.Company import Company
 from database.Certification import Certification
 from database.Bill import Bill
 from database.BillDetail import BillDetail
-from database.Order import Order
 from database.PassengerIdentity import PassengerIdentity
+from database.BusRoute import BusRoute
+from database.BusStation import BusStation
+from database.Company import Company
+from database.Order import Order
 
 from ext import cache
 from utils import smscode
@@ -89,7 +92,7 @@ class ClientAppService(object):
     @staticmethod
     def login(user_id, token):
         cache.set(ClientAppService.TOKEN_ID_KEY.format(token), user_id)
-        cache.expire(ClientAppService.TOKEN_ID_KEY.format(token), 60 * 60 * 2)
+        cache.expire(ClientAppService.TOKEN_ID_KEY.format(token), 60 * 60 * 8)
 
     @staticmethod
     def signin(mobile, password):
@@ -675,7 +678,7 @@ class ClientAppService(object):
             return weixinpay.get_unified_ordering(data, remote_addr)
 
     @staticmethod
-    def user_orders(user_id):
+    def user_orders(user_id, last_pk):
         """
         'id', 'discount', 'real_amount', 'discount_way', 'line_no',
                   'station', 'scan_time', 'bus_id', 'mobile', 'amount',
@@ -683,16 +686,13 @@ class ClientAppService(object):
                   'content', 'company_name'
         """
         db.session.commit()
-        from database.BusRoute import BusRoute
-        from database.BusStation import BusStation
-        from database.Company import Company
-        from database.Order import Order
 
         sets = db.session.query(Order, BusRoute, UserProfile, Company).join(
             BusRoute, BusRoute.id == Order.route_id).join(
             UserProfile, UserProfile.id == Order.user_id).join(
             Company, Company.id == Order.company_id).filter(
-            Order.user_id == user_id).order_by(Order.id.desc()).all()
+            Order.user_id == user_id).order_by(Order.id.desc()).filter(
+            Order.id < last_pk).all()
         results = []
         for row in sets:
             order = row[0]
@@ -803,7 +803,7 @@ class ClientAppService(object):
             start_time_raw = datetime.strptime(start_time_str,
                                                '%Y-%m-%d %H:%M:%S')
             query = query.filter(Notice.start_time > start_time_raw)
-        notices = query.order_by(Notice.create_time.desc()).all()
+        notices = query.order_by(Notice.start_time.desc()).all()
         results = []
         for row in notices:
             d = defaultdict()

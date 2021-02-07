@@ -49,10 +49,11 @@ class CouponService(object):
             d['face_value'] = str(coupon.face_value)
             d['name'] = coupon_type_name
             d['status'] = coupon.status
-            if coupon.status == 2:
+            print coupon.status
+            if coupon.status in (2, 3, 4):
                 user_profile = db.session.query(UserProfile).join(
-                    UserCoupe, UserCoupe.user_id==UserProfile.id).filter(
-                    UserCoupe.coupon_id == coupon.id).fist()
+                    UserCoupe, UserCoupe.user_id == UserProfile.id).filter(
+                    UserCoupe.coupon_id == coupon.id).first()
                 d['mobile'] = user_profile.mobile
             else:
                 d['mobile'] = ""

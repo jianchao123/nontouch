@@ -142,7 +142,7 @@ parameters:
           type: string
           description: 设备品牌
         type:
-          type: string
+          type: integer
           description: 设备类型 1扫码设备 2人脸设备 3刷卡 4刷卡扫码二合一
         model_number:
           type: string
@@ -227,7 +227,7 @@ parameters:
           type: string
           description: 设备品牌
         type:
-          type: string
+          type: integer
           description: 设备类型 1扫码设备 2人脸设备 3刷卡 4刷卡扫码二合一
         model_number:
           type: string

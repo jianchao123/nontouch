@@ -61,14 +61,18 @@ class GetStationBusiness(object):
                   "need_utd=true&utd_sceneid=1000&div=PC1000&addr_poi_merge=true&" \
                   "is_classify=true&zoom=9.72&" \
                   "city={}&src=mypage&callnative=0&innersrc=uriapi&keywords={}"
-        relation_sql = "SELECT `id` FROM `route_station_relation` WHERE `code`={} AND `round_trip`={} AND `bus_route_id`={} AND `bus_station_id`={}"
+        relation_sql = "SELECT `id` FROM `route_station_relation` " \
+                       "WHERE `code`={} AND `round_trip`={} AND " \
+                       "`bus_route_id`={} AND `bus_station_id`={}"
 
         for lineno in route_ids.split(","):
             key_name = str(lineno) + "路"
             url = req_url. \
                 format(district_code, urllib.quote(key_name.encode('utf8')))
+            print url
             res = requests.get(url)
             d = json.loads(res.content)
+            print d
             buslines = []
             if int(d['status']) == 1:
                 more_data = d['busMoreData']
@@ -96,8 +100,8 @@ class GetStationBusiness(object):
                         'amount': 2,
                         'status': 1,
                         'round_trip': 1,
-                        'start_time': '',
-                        'end_time': '',
+                        'start_time': '1937-1-1 07:00:00',
+                        'end_time': '1937-1-1 23:00:00',
                         'company_id': company_id
                     }
                     db.insert(sql_cur, d, table_name='bus_route')
@@ -117,8 +121,8 @@ class GetStationBusiness(object):
                         'amount': 2,
                         'status': 1,
                         'round_trip': 2,
-                        'start_time': '',
-                        'end_time': '',
+                        'start_time': '1937-1-1 07:00:00',
+                        'end_time': '1937-1-1 23:00:00',
                         'company_id': company_id
                     }
                     db.insert(sql_cur, d, table_name='bus_route')

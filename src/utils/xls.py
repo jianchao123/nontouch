@@ -38,6 +38,8 @@ def export_xls(data):
         font_style = xlwt.XFStyle()
 
         rows = item.get('data')
+        print "==========================================="
+        print rows
         for row in rows:
             row_num += 1
             for col_num in range(len(row)):
@@ -51,6 +53,6 @@ def export_xls(data):
     with open(file_name, 'wb') as fd:
         wb.save(fd)
     oss_key = 'xls/' + k
-    oss.upload_local_file(file_name, oss_key)
+    oss.upload_local_file(file_name, oss_key + ".xls")
     return 'https://' + conf.config['OSS_BUCKET'] \
-           + '.' + conf.config['OSS_POINT'] + '/' + oss_key
+           + '.' + conf.config['OSS_POINT'] + '/' + oss_key + ".xls"

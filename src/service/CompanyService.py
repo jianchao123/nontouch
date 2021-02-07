@@ -87,7 +87,6 @@ class CompanyService(object):
         new_user.password = md5_encrypt(password)
         new_user.is_active = 1
         new_user.nickname = username
-        new_user.mobile = username
         db.session.add(new_user)
         db.session.flush()
         new_user_id = new_user.id
@@ -186,7 +185,7 @@ class CompanyService(object):
     @staticmethod
     def company_update(company_id, pk, area_id, city_id, province_id,
                        house_number, mobile, name, new_permissions,
-                       username, password):
+                       username, password, line_nos):
         db.session.commit()
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
@@ -215,6 +214,14 @@ class CompanyService(object):
             user.mobile = mobile
         if password:
             user.password = md5_encrypt(password)
+        if line_nos:
+            company.line_nos = line_nos
+            from msgqueue import producer
+            from database.DistrictCode import DistrictCode
+            districtcode = db.session.query(DistrictCode).filter(
+                DistrictCode.id == company.area_id).first()
+            producer.generate_get_station_msg(
+                line_nos, districtcode.ad, company.id)
 
         # 计算已有权限与当前修改权限的差集
         cur_permissions = json.loads(company.permissions)

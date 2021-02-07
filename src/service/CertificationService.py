@@ -35,8 +35,8 @@ class CertificationService(object):
         if mobile:
             query = query.filter(UserProfile.mobile == mobile)
         count = query.count()
-        print count
-        sets = query.offset(offset).limit(limit).all()
+        sets = query.order_by(Certification.status.asc()).order_by(
+            Certification.id.desc()).offset(offset).limit(limit).all()
         results = []
         for row in sets:
             cert = row[0]

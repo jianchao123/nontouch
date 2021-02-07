@@ -1,6 +1,10 @@
 # coding:utf-8
-
+import os
 from config.default import Config
+
+project_dir = os.path.dirname(os.path.realpath(__file__))
+project_dir = os.path.dirname(project_dir)
+project_dir = os.path.dirname(project_dir)
 
 
 class DevelopmentConfig(Config):
@@ -69,7 +73,8 @@ class DevelopmentConfig(Config):
     BAIDU_GROUP_ID = "dev"
 
     # 临时目录
-    TEMP_DIR = '/data/temp'
+
+    TEMP_DIR = project_dir + "/src/utils/temp"
 
     # 公交项目使用redis db3
     REDIS_DB = 3

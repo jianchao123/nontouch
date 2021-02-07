@@ -1156,7 +1156,8 @@ responses:
               type: integer
               description: 1-无感行二维码 2-人脸 3-IC卡
     """
-    return ClientAppService.user_orders(user_id)
+    last_pk = args['last_pk']
+    return ClientAppService.user_orders(user_id, last_pk)
 
 
 @bp.route('/getststoken/', methods=['GET'])

@@ -164,6 +164,9 @@ parameters:
         password:
           type: string
           description: 管理员密码
+        line_nos:
+          type: string
+          description: 线路ids 逗号分割
 responses:
   200:
     description: 正常返回http code 200
@@ -187,6 +190,7 @@ responses:
     province_id = args.get('province', None)
     house_number = args.get('house_number', None)
     mobile = args.get('mobile', None)
+    line_nos = args.get('line_nos', None)
     name = args.get('name', None)
     new_permissions = args.get('permissions', None)
     username = args.get('username', None)
@@ -194,7 +198,7 @@ responses:
 
     ret = CompanyService.company_update(
         company_id, pk, area_id, city_id, province_id, house_number,
-        mobile, name, new_permissions, username, password)
+        mobile, name, new_permissions, username, password, line_nos)
     if ret == -1:
         raise AppError(*GlobalErrorCode.OBJ_NOT_FOUND_ERROR)
     if ret == -2:

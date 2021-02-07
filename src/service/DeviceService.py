@@ -38,6 +38,7 @@ class DeviceService(object):
             d['car'] = bus_id
             d['is_online'] = row.is_online
             d['status'] = row.status
+            d['name'] = row.name
             results.append(d)
         return {'count': count, 'results': results}
 
@@ -118,32 +119,31 @@ class DeviceService(object):
 
     @staticmethod
     def device_update(pk, brand, buy_date, device_no, manufacture_date,
-                      model_number, name, pro_seq_number,
-                      type):
+                      model_number, name, pro_seq_number, type):
         db.session.commit()
         device = db.session.query(Device).filter(Device.id == pk).first()
         if not device:
             return -1
+
+        if brand:
+            device.brand = brand
+        if buy_date:
+            device.buy_date = datetime.strptime(
+                buy_date, '%Y-%m-%d').date()
+        if device_no:
+            device.device_no = device_no
+        if manufacture_date:
+            device.manufacture_date = datetime.strptime(
+                manufacture_date, '%Y-%m-%d').date()
+        if model_number:
+            device.model_number = model_number
+        if name:
+            device.name = name
+        if pro_seq_number:
+            device.pro_seq_number = pro_seq_number
+        if type:
+            device.type = type
         try:
-            if brand:
-                device.brand = brand
-            if buy_date:
-                device.buy_date = datetime.strptime(
-                    buy_date, '%Y-%m-%d').date()
-            if device_no:
-                device.device_no = device_no
-            if manufacture_date:
-                device.manufacture_date = datetime.strptime(
-                    manufacture_date, '%Y-%m-%d').date()
-            if model_number:
-                device.model_number = model_number
-            if name:
-                device.name = name
-            if pro_seq_number:
-                device.pro_seq_number = pro_seq_number
-            if type:
-                device.type = type
-            db.session.add(device)
             db.session.commit()
             return pk
         except SQLAlchemyError:
