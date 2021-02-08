@@ -131,7 +131,8 @@ responses:
         raise AppError(*SubErrorCode.USER_PWD_ERR)
     if ret == -10:
         raise AppError(*SubErrorCode.USER_PWD_ERR)
-
+    if ret == -11:
+        raise AppError(*SubErrorCode.APP_USER_DISABLED)
     return ret
 
 

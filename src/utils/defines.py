@@ -60,6 +60,7 @@ class SubErrorCode(object):
     APP_USER_PWD_ERROR = (200054, u"密码错误")
     APP_USER_ALREADY_EXIST = (200055, u"用户已经存在")
     APP_USER_IN_BAIDU_NOT_FOUND = (200056, u"用户没有在百度人脸库找到")
+    APP_USER_DISABLED = (200057, u"用户已被管理员禁用")
 
     APP_COUPON_STATUS_ERR = (200056, u"优惠券状态错误")
     APP_COUPON_ACTIVITY_NOT_STARTING = (200057, u"活动已结束")

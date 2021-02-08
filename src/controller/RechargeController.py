@@ -56,6 +56,10 @@ def recharge_list(user_id, company_id, args):
         in: query
         type: string
         description: 订单或者手机号
+      - name: user_id
+        in: query
+        type: integer
+        description: 用户id
     responses:
       200:
         description: 正常返回http code 200
@@ -114,5 +118,6 @@ def recharge_list(user_id, company_id, args):
     find_str = args.get('find_str', None)
     pay_type = args.get('pay_type', None)
     status = args.get('status', None)
+    user_id = args.get('user_id', None)
     return RechargeService.recharge_list(
-        company_id, find_str, pay_type, status, offset, limit)
+        company_id, find_str, pay_type, status, offset, limit, user_id)

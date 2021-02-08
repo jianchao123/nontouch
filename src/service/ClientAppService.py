@@ -54,7 +54,8 @@ class ClientAppService(object):
             UserProfile.mobile == mobile).first()
         if not user:
             return None
-        return {'id': user.id, 'mobile': user.mobile, 'password': user.password}
+        return {'id': user.id, 'mobile': user.mobile,
+                'password': user.password, 'is_active': user.is_active}
 
     @staticmethod
     def send_verify_code(mobile, code_type):
@@ -102,7 +103,8 @@ class ClientAppService(object):
         user_obj = ClientAppService.get_user_by_mobile(mobile)
         if not user_obj:
             return -1
-        print user_obj
+        if not user_obj['is_active']:
+            return -11
         password_md5_str = md5_encrypt(password)
         if user_obj["password"] != password_md5_str:
             return -10

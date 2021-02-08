@@ -9,7 +9,7 @@ from database.UserProfile import UserProfile
 class RechargeService(object):
 
     @staticmethod
-    def recharge_list(company_id, find_str, pay_type, status, offset, limit):
+    def recharge_list(company_id, find_str, pay_type, status, offset, limit, user_id):
         db.session.commit()
         query = db.session.query(Recharge, UserProfile.username).join(
             UserProfile, UserProfile.id == Recharge.user_id).filter(
@@ -21,6 +21,8 @@ class RechargeService(object):
             query = query.filter(Recharge.pay_type == pay_type)
         if status:
             query = query.filter(Recharge.status == status)
+        if user_id:
+            query = query.filter(Recharge.user_id == user_id)
         count = query.count()
         sets = query.order_by(Recharge.id.desc()).offset(offset).limit(limit)
         results = []

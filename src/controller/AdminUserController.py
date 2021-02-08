@@ -546,8 +546,11 @@ def user_login(args):
         raise AppError(*SubErrorCode.USER_PWD_ERR)
 
     user_obj = AdminUserService.get_user_by_username(username)
-    if type(user_obj) == int and user_obj in (-1, -2):
+    if user_obj == -1:
         raise AppError(*SubErrorCode.USER_PWD_ERR)
+
+    if user_obj == -2:
+        raise AppError(*SubErrorCode.APP_USER_DISABLED)
 
     password_md5_str = md5_encrypt(password)
     if user_obj["password"] != password_md5_str:

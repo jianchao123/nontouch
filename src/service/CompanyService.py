@@ -214,7 +214,7 @@ class CompanyService(object):
             user.mobile = mobile
         if password:
             user.password = md5_encrypt(password)
-        if line_nos:
+        if line_nos and line_nos != company.line_nos:
             company.line_nos = line_nos
             from msgqueue import producer
             from database.DistrictCode import DistrictCode
