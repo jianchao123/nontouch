@@ -72,7 +72,7 @@ class ClientAppService(object):
         if not mobile_validate(mobile):
             return -10  # APP_USER_PHONE_NUMBER_ILLEGALITY
         user_profile = db.session.query(UserProfile).filter(
-            UserProfile.mobile == mobile).first()
+            UserProfile.mobile == 3).first()
         if user_profile and code_type == 1:
             return -11  # APP_USER_PHONE_NUMBER_REGISTERED
         if not user_profile and code_type in (2, 3):
@@ -88,6 +88,7 @@ class ClientAppService(object):
             return -14  # APP_USER_VERIFICATION_CODE_SENDING_FAIL
         cache.set(k, rand_code)
         cache.expire(k, 60)
+        print u"验证码", rand_code
         return {}
 
     @staticmethod
@@ -178,6 +179,13 @@ class ClientAppService(object):
         d['gender'] = user_profile.gender
         d['birthday'] = user_profile.birthday.strftime('%Y-%m-%d')
         d['is_open_face_rgz'] = True if user_profile.is_open_face_rgz else False
+        face_img = db.session.query(FaceImg).filter(
+            FaceImg.baidu_user_id == user_profile.mobile).first()
+        print face_img
+        if face_img:
+            d['face_url'] = face_img.oss_url
+        else:
+            d['face_url'] = ''
 
         # 是否充值超过5元
         amounts = db.session.query(Recharge).filter(
@@ -554,7 +562,7 @@ class ClientAppService(object):
                     conf.config['BAIDU_GROUP_ID'], baidu_user_id)
 
     @staticmethod
-    def user_recharges(user_id, is_open_bill, last_pk):
+    def user_recharges(user_id, is_open_bill, last_pk, state):
         """
         用户的充值记录
         is_open_bill 1-已开具的 2-未开具的
@@ -577,6 +585,9 @@ class ClientAppService(object):
                 Recharge.user_id == user_id, Recharge.status == 2)
         else:
             query = query.filter(Recharge.user_id == user_id)
+
+        if state:
+            query = query.filter(Recharge.status == state)
 
         query = query.order_by(Recharge.id.desc())
         if last_pk:
@@ -603,6 +614,8 @@ class ClientAppService(object):
     def get_sign(data):
         data.pop('pay_type')
         res = pay.add_sign(data)
+        print "------------------------"
+        print res
         return res
 
     @staticmethod

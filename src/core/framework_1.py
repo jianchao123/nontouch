@@ -95,7 +95,10 @@ def parse_post_args(request):
     """
     req_args = request.values
     try:
-        return req_args.to_dict()
+        if req_args:
+            return req_args.to_dict()
+        else:
+            return request.get_json()
     except:
         raise ApiArgsError(*GlobalErrorCode.PARAMS_DESERIALIZE_ERR)
 
@@ -120,7 +123,7 @@ def post_check_args(request, args_name):
     """
 
     req_args = parse_post_args(request)
-
+    print req_args, args_name
     non_exists_name = is_argument_exists(req_args, args_name)
     if non_exists_name:
         raise ApiArgsError(*missing_parameter(

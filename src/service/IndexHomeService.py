@@ -300,15 +300,18 @@ class IndexHomeService(object):
     @staticmethod
     def route_rank_histogram(today, company_id=None):
         """线路流量排行"""
+        from datetime import datetime
 
-        sql = "SELECT br.`line_no`, COUNT(o.`id`) FROM `bus_route` as br " \
-              "INNER JOIN `order` as o ON o.`route_id`=br.id {} " \
-              "GROUP BY br.`id`"
+        sql = "SELECT br.`line_no`, COUNT(o.`route_id`) FROM `bus_route` as br " \
+              "LEFT JOIN (SELECT TMP.create_time, TMP.`route_id` FROM " \
+              "(SELECT `create_time`,`route_id` FROM `order` WHERE DATE_FORMAT(`create_time`,'%Y-%m-%d') = '" + datetime.strftime(today, '%Y-%m-%d') + "') AS TMP) as o \
+ON o.`route_id`=br.id {} GROUP BY br.`id`"
+
         if company_id:
             sql = sql.format(" WHERE br.`company_id`={} ".format(company_id))
         else:
             sql = sql.format(" ")
-
+        print sql
         data = []
         cursor = db.session.execute(sql)
         result = cursor.fetchall()

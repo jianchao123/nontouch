@@ -936,7 +936,9 @@ responses:
     """
     is_open_bill = args.get('is_open_bill', None)
     last_pk = args['last_pk']
-    return ClientAppService.user_recharges(user_id, is_open_bill, last_pk)
+    state = args.get('state', None)
+    return ClientAppService.user_recharges(
+        user_id, is_open_bill, last_pk, state)
 
 
 @bp.route('/recharges/add/', methods=['POST'])
@@ -1103,11 +1105,14 @@ responses:
               description: JSAPI 默认MD5
 
     """
-    return ClientAppService.user_recharge_change(order_no, request.remote_addr)
+    ret = ClientAppService.user_recharge_change(order_no, request.remote_addr)
+    if ret == -10:
+        raise AppError(*SubErrorCode.APP_DEPOSIT_ERR)
+    return ret
 
 
 @bp.route('/orders/', methods=['GET'])
-@get_require_check_with_user([])
+@get_require_check_with_user(['last_pk'])
 def orders(user_id, args):
     """
 乘车记录

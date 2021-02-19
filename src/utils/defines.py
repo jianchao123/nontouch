@@ -102,6 +102,9 @@ class SubErrorCode(object):
     # 人脸 200240 - 200249
     FACE_UPLOAD_IMAGE_NOT_FACE = (200240, u"上传的图片不是人脸")
 
+    # 充值
+    APP_DEPOSIT_ERR = (200250, u"充值错误")
+
 
 ORDER_STATUS = dict(
     valid=1,    # 有效

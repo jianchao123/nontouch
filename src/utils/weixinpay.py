@@ -81,10 +81,10 @@ def get_unified_ordering(data, spbill_create_ip, platform_type=1, openid=""):
             result['sign'] = pay.sign(result)
             return result
         else:
-            return {'error': u'充值出现错误'}
+            return -10
     except Exception as err:
         print err
-        return {'error': u'充值出现错误'}
+        return -10
 
 
 def xml_to_dict(content):
