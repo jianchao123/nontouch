@@ -179,6 +179,7 @@ class ClientAppService(object):
         d['gender'] = user_profile.gender
         d['birthday'] = user_profile.birthday.strftime('%Y-%m-%d')
         d['is_open_face_rgz'] = True if user_profile.is_open_face_rgz else False
+        print user_profile.mobile
         face_img = db.session.query(FaceImg).filter(
             FaceImg.baidu_user_id == user_profile.mobile).first()
         print face_img
@@ -518,6 +519,8 @@ class ClientAppService(object):
             except:
                 import traceback
                 print traceback.format_exc()
+            # 223105图片已经存在
+            print data
             if data and data["error_code"] == 223105:
                 return -10  # CERT_REPETITION_REGISTER_FACE
 
@@ -613,7 +616,7 @@ class ClientAppService(object):
     @staticmethod
     def get_sign(data):
         data.pop('pay_type')
-        res = pay.add_sign(data)
+        res = pay.alipay_trade_app_pay(data)
         print "------------------------"
         print res
         return res
@@ -1140,3 +1143,12 @@ class ClientAppService(object):
             return -2
         finally:
             db.session.close()
+
+    @staticmethod
+    def enterprise_alipay(trans_amount, mobile, name):
+        """企业付款"""
+        content = pay.alipay_fund_transfer(trans_amount, mobile, name)
+        status = content['alipay_fund_trans_uni_transfer_response']['status']
+        if status != 'SUCCESS':
+            return -10
+        return {"status": "success"}

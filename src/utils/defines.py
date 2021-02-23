@@ -104,6 +104,7 @@ class SubErrorCode(object):
 
     # 充值
     APP_DEPOSIT_ERR = (200250, u"充值错误")
+    APP_WITHDRAW_ERR = (200251, u"提现失败,请检查手机号和身份证名字")
 
 
 ORDER_STATUS = dict(

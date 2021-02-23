@@ -53,7 +53,6 @@ def create_app():
 
     # 初始化db
     SQLAlchemy(app)
-    Swagger(app)
 
     return app
 
@@ -64,6 +63,8 @@ app = create_app()
 
 if __name__ == '__main__':
     register_blueprints('controller', app)
+    Swagger(app)
+
     # from controller.AdminUserController import bp as admin_user
     # from controller.AdvertController import bp as advert
     # from controller.BillController import bp as bill

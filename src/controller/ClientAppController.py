@@ -1734,3 +1734,62 @@ responses:
     if ret == -2:
         raise AppError(*GlobalErrorCode.DB_COMMIT_ERR)
     return ret
+
+
+@bp.route('/withdraw/', methods=['POST'])
+@post_require_check_with_user(['trans_amount', 'mobile', 'name'])
+def withdraw(user_id, args):
+    """
+    提现
+    提现，需要先登录
+    ---
+    tags:
+      - APP
+    parameters:
+      - name: token
+        in: header
+        type: string
+        required: true
+        description: TOKEN
+      - name: body
+        in: body
+        required: true
+        schema:
+          properties:
+            trans_amount:
+              type: number
+              description: 金额
+            mobile:
+              type: string
+              description: 手机号
+            name:
+              type: string
+              description: 身份证名字
+
+    responses:
+      200:
+        description: 正常返回http code 200
+        schema:
+          properties:
+            msg:
+              type: string
+              description: 错误消息
+            status:
+              type: integer
+              description: 状态
+            data:
+              type: array
+              items:
+                properties:
+                  id:
+                    type: integer
+                    description: id
+
+    """
+    trans_amount = args['trans_amount']
+    mobile = args['mobile']
+    name = args['name']
+    ret = ClientAppService.enterprise_alipay(trans_amount, mobile, name)
+    if ret == -10:
+        raise AppError(*SubErrorCode.APP_WITHDRAW_ERR)
+    return ret

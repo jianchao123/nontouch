@@ -163,11 +163,12 @@ class MiniService(object):
             face_img.face_id = baidu_res["result"]["face_token"]
             face_img.face_last_time = datetime.now()
             face_img.status = 1     # 有效
+            db.session.add(face_img)
         # 打开人脸功能
         user.is_open_face_rgz = True
         try:
             db.session.commit()
-            return {'id': face_img.id}
+            return {'id': 0}
         except SQLAlchemyError:
             db.session.rollback()
             return -2
