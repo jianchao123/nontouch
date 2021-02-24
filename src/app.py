@@ -31,8 +31,6 @@ def register_blueprints(root, app):
                 app.register_blueprint(
                     mod.bp, url_prefix=mod.url_prefix)
         except ImportStringError:
-            import traceback
-            print traceback.format_exc()
             continue
 
 
@@ -42,6 +40,7 @@ def create_app():
     """
 
     app = Flask(__name__)
+    Swagger(app)
     CORS(app, supports_credentials=True)
     # 加载配置
     app.config.from_object(load_config())
@@ -53,6 +52,7 @@ def create_app():
 
     # 初始化db
     SQLAlchemy(app)
+    register_blueprints('controller', app)
 
     return app
 
@@ -62,9 +62,6 @@ app = create_app()
 
 
 if __name__ == '__main__':
-    register_blueprints('controller', app)
-    Swagger(app)
-
     # from controller.AdminUserController import bp as admin_user
     # from controller.AdvertController import bp as advert
     # from controller.BillController import bp as bill
