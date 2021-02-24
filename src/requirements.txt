@@ -21,3 +21,4 @@ alipay-sdk-python==3.3.398
 xlwt==1.3.0
 Cython==0.29.21
 simplejson==3.17.2
+pika==1.1.0
