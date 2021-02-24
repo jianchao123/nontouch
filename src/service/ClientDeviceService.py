@@ -1,12 +1,5 @@
 # coding:utf-8
-import base64
 import requests
-from sqlalchemy import and_
-from datetime import datetime
-from decimal import Decimal
-from collections import defaultdict
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import func
 from datetime import date
 from datetime import timedelta
 
@@ -16,16 +9,7 @@ from database.BusCar import BusCar
 from database.BusRoute import BusRoute
 from database.PassengerWeeklyCount import PassengerWeeklyCount
 from database.FaceImg import FaceImg
-
-from ext import cache
-from utils import smscode
-from utils.validators import mobile_validate
-from utils.tools import md5_encrypt, gen_token
-from utils import scan
-from utils import face
 from ext import conf
-from utils import pay
-from utils import weixinpay
 
 
 class ClientDeviceService(object):

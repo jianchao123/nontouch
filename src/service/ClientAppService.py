@@ -19,7 +19,6 @@ from database.DistrictCode import DistrictCode
 from database.Application import Application
 from database.LostAndFound import LostAndFound
 from database.Identity import Identity
-from database.Company import Company
 from database.Certification import Certification
 from database.Bill import Bill
 from database.BillDetail import BillDetail

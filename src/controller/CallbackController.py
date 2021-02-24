@@ -1,25 +1,23 @@
 # coding:utf-8
-try:
-    import json
-    from flask import request
-    from sqlalchemy import and_
-    from decimal import Decimal
-    from datetime import datetime
-    from flask.blueprints import Blueprint
-    from flask import Response
-    from sqlalchemy.exc import SQLAlchemyError
 
-    from core.framework import get_require_check_with_permissions, \
-        post_require_check_with_permissions, post_require_check
-    from core.AppError import AppError
-    from utils.defines import SubErrorCode, GlobalErrorCode
+import json
+from flask import request
+from sqlalchemy import and_
+from decimal import Decimal
+from datetime import datetime
+from flask.blueprints import Blueprint
+from flask import Response
+from sqlalchemy.exc import SQLAlchemyError
 
-    from service.CallbackService import CallbackService
-    from utils import scan
-    from utils import pay
-except:
-    import traceback
-    print traceback.format_exc()
+from core.framework import get_require_check_with_permissions, \
+    post_require_check_with_permissions, post_require_check
+from core.AppError import AppError
+from utils.defines import SubErrorCode, GlobalErrorCode
+
+from service.CallbackService import CallbackService
+from utils import scan
+from utils import pay
+
 try:
     import requests
 
