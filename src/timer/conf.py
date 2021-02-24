@@ -49,19 +49,14 @@ else:
 
     redis_conf = dict(host="127.0.0.1", port=6379, db=0, decode_responses=True)
 
-    mysql_conf = dict(host="127.0.0.1", port=3306, db="nontouch_1",
+    mysql_conf = dict(host="127.0.0.1", port=3306, db="wuganxing_1",
                       user="root", passwd="kIhHAWexFy7pU8qM", charset="utf8")
 
-    Productkey = 'a1agDqZJSpQ'
-    ProductHost = 'a1agDqZJSpQ.iot-as-mqtt.cn-shanghai.aliyuncs.com'
-    ProductSecret = 'SRXmMyDqCb9iIzez'
-    DeviceSecret = '4c1f6d157b5f518585bb363acbec0071'  # 'CVAp97tAUayElJwRbiXAiTgcoCZZAX1j'
-
-    OSSDomain = 'https://.oss-cn-beijing.aliyuncs.com'
-    OSSAccessKeyId = ''
-    OSSAccessKeySecret = ''
-    OSSEndpoint = 'http://oss-cn-beijing.aliyuncs.com'
-    OSSBucketName = ''
+    OSSDomain = 'https://wgxing-pro.oss-cn-zhangjiakou.aliyuncs.com'
+    OSSAccessKeyId = 'LTAIWE5CGeOiozf7'
+    OSSAccessKeySecret = 'IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj'
+    OSSEndpoint = 'oss-cn-zhangjiakou.aliyuncs.com'
+    OSSBucketName = 'wgxing-pro'
 
 
 logger = get_logger(log_path)
