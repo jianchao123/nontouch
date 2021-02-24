@@ -20,10 +20,10 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = \
         'mysql://root:kIhHAWexFy7pU8qM@127.0.0.1/wuganxing_1'
 
-    LOG_PATH = '/data/logs/main'
+    LOG_PATH = '/data/logs/nontouch_1/main'
 
     # 阿里云OSS
-    OSS_BUCKET = "wgxing-test"
+    OSS_BUCKET = "wgxing-pro"
     OSS_REGION = "oss-cn-zhangjiakou"
     OSS_POINT = "oss-cn-zhangjiakou.aliyuncs.com"
     OSS_ALL_KEY = "LTAIWE5CGeOiozf7"  # 所有权限
@@ -75,3 +75,5 @@ class ProductionConfig(Config):
 
     # 临时目录
     TEMP_DIR = '/data/temp'
+
+    REDIS_DB = 3

@@ -76,3 +76,5 @@ class TestingConfig(Config):
 
     # 临时目录
     TEMP_DIR = '/data/temp'
+
+    REDIS_DB = 3
