@@ -447,6 +447,7 @@ def is_authentication(path, permissions, user_company_id):
     :param user_company_id:
     :return:
     """
+    from service.UserProfileService import UserProfileService
     path = path[1:]     # 去除path的斜杠
     cur_entity = None
     cur_method = None
@@ -485,6 +486,7 @@ def get_require_check_with_permissions(args_name):
         @wraps(fn)
         def __wrapper(**arg):
             try:
+                from service.UserProfileService import UserProfileService
                 require_token_check(request, g)
                 # 获取信息
                 user_info = UserProfileService.get_user_permissions(g.user_id)
@@ -527,6 +529,7 @@ def post_require_check_with_permissions(args_name):
         @wraps(fn)
         def __wrapper(**arg):
             try:
+                from service.UserProfileService import UserProfileService
                 require_token_check(request, g)
                 user_info = UserProfileService.get_user_permissions(g.user_id)
                 # 权限
