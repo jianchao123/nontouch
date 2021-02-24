@@ -51,6 +51,8 @@ def create_app():
     conf.init_app(app)
     cache.init_app(app)
 
+    from flask_sqlalchemy import SQLAlchemy
+    SQLAlchemy(app)
     register_blueprints('controller', app)
     # from controller import bp
     # app.register_blueprint(bp, url_prefix='/user')
