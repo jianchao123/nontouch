@@ -1,13 +1,11 @@
 # coding:utf-8
-try:
-    from flask.blueprints import Blueprint
 
-    from core.framework import get_require_check_with_permissions
+from flask.blueprints import Blueprint
 
-    from service.CouponService import CouponService
-except:
-    import traceback
-    print traceback.format_exc()
+from core.framework import get_require_check_with_permissions
+
+from service.CouponService import CouponService
+
 
 try:
     import requests

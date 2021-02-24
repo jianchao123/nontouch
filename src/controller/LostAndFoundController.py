@@ -1,15 +1,13 @@
 # coding:utf-8
-try:
-    from flask.blueprints import Blueprint
-    from core.framework import get_require_check_with_permissions, \
-        post_require_check_with_permissions
-    from core.AppError import AppError
-    from utils.defines import GlobalErrorCode, SubErrorCode
 
-    from service.LostAndFoundService import LostAndFoundService
-except:
-    import traceback
-    print traceback.format_exc()
+from flask.blueprints import Blueprint
+from core.framework import get_require_check_with_permissions, \
+    post_require_check_with_permissions
+from core.AppError import AppError
+from utils.defines import GlobalErrorCode, SubErrorCode
+
+from service.LostAndFoundService import LostAndFoundService
+
 try:
     import requests
 

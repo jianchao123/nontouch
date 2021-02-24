@@ -1,11 +1,9 @@
 # coding:utf-8
-try:
-    from flask.blueprints import Blueprint
-    from core.framework import get_require_check_with_permissions
-    from service.RechargeService import RechargeService
-except:
-    import traceback
-    print traceback.format_exc()
+
+from flask.blueprints import Blueprint
+from core.framework import get_require_check_with_permissions
+from service.RechargeService import RechargeService
+
 try:
     import requests
 

@@ -1,16 +1,13 @@
 # coding:utf-8
-try:
-    from flask.blueprints import Blueprint
-    from core.framework import get_require_check_with_permissions, \
-        post_require_check_with_permissions, post_require_check
-    from core.AppError import AppError
-    from utils.defines import GlobalErrorCode, SubErrorCode
-    from service.AdminUserService import AdminUserService
-    from ext import conf
-    from utils.tools import gen_token, md5_encrypt
-except:
-    import traceback
-    print traceback.format_exc()
+
+from flask.blueprints import Blueprint
+from core.framework import get_require_check_with_permissions, \
+    post_require_check_with_permissions, post_require_check
+from core.AppError import AppError
+from utils.defines import GlobalErrorCode, SubErrorCode
+from service.AdminUserService import AdminUserService
+from ext import conf
+from utils.tools import gen_token, md5_encrypt
 
 
 try:

@@ -1,9 +1,6 @@
 # coding=utf-8
-try:
-    from redis import StrictRedis as Redis
-except:
-    import traceback
-    print traceback.format_exc()
+
+from redis import StrictRedis as Redis
 
 
 class CCacheHelper(Redis):

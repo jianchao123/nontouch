@@ -1,20 +1,10 @@
 # coding:utf-8
-
-try:
-    from functools import wraps
-
-    from flask import request, jsonify, g
-
-    import re
-    from utils.defines import GlobalErrorCode
-    from service.UserProfileService import UserProfileService
-
-    from ext import log
-    from AppError import *
-    from utils.tools import DecimalEncoder
-except:
-    import traceback
-    print traceback.format_exc()
+from functools import wraps
+from flask import request, jsonify, g
+import re
+from utils.defines import GlobalErrorCode
+from ext import log
+from AppError import *
 
 
 def make_error_resp(error_code, error_msg):

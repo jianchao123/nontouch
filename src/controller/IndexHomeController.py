@@ -1,16 +1,14 @@
 # coding:utf-8
-try:
-    from datetime import timedelta
-    from collections import defaultdict
-    from flask.blueprints import Blueprint
-    from core.framework import get_require_check_with_permissions
-    from core.AppError import AppError
-    from utils.defines import GlobalErrorCode, SubErrorCode
-    from service.IndexHomeService import IndexHomeService
-    from ext import conf
-except:
-    import traceback
-    print traceback.format_exc()
+
+from datetime import timedelta
+from collections import defaultdict
+from flask.blueprints import Blueprint
+from core.framework import get_require_check_with_permissions
+from core.AppError import AppError
+from utils.defines import GlobalErrorCode, SubErrorCode
+from service.IndexHomeService import IndexHomeService
+from ext import conf
+
 try:
     import requests
 

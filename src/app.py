@@ -8,10 +8,7 @@ from werkzeug.utils import ImportStringError
 from flask import Flask
 from werkzeug.utils import find_modules, import_string
 from flasgger import Swagger
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import *
-from config import load_config
-from ext import log, conf, cache
 
 
 def register_blueprints(root, app):
@@ -40,19 +37,23 @@ def create_app():
     """
 
     app = Flask(__name__)
+
     Swagger(app)
     CORS(app, supports_credentials=True)
+
     # 加载配置
+    from config import load_config
     app.config.from_object(load_config())
 
     # 初始化log conf对象
+    from ext import log, conf, cache
     log.init_app(app)
     conf.init_app(app)
     cache.init_app(app)
 
-    # 初始化db
-    SQLAlchemy(app)
     register_blueprints('controller', app)
+    # from controller import bp
+    # app.register_blueprint(bp, url_prefix='/user')
 
     return app
 

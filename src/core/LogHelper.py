@@ -3,13 +3,10 @@
 """
 日志输出模块
 """
-try:
-    import logging
-    import threading
-    import json
-except:
-    import traceback
-    print traceback.format_exc()
+import logging
+import threading
+import json
+
 
 """ 日志等级定义 """
 LOG_LEVEL = {
