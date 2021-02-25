@@ -44,6 +44,7 @@ class GetStationBusiness(object):
 
     @transaction(is_commit=True)
     def get_station(self, sql_cur, data):
+        print "============================="
         db = MysqlDbUtil
         route_ids = data['route_ids']
         district_code = data['district_code']
