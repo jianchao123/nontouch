@@ -220,6 +220,7 @@ class CompanyService(object):
             from database.DistrictCode import DistrictCode
             districtcode = db.session.query(DistrictCode).filter(
                 DistrictCode.id == company.area_id).first()
+            print "==========================="
             producer.generate_get_station_msg(
                 line_nos, districtcode.ad, company.id)
 

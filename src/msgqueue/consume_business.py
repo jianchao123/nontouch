@@ -69,7 +69,6 @@ class GetStationBusiness(object):
             key_name = str(lineno) + "路"
             url = req_url. \
                 format(district_code, urllib.quote(key_name.encode('utf8')))
-            print url
             res = requests.get(url)
             d = json.loads(res.content)
             print d
@@ -92,7 +91,6 @@ class GetStationBusiness(object):
                     go_stations[-1]['name'])
 
                 busline_obj1 = db.get(sql_cur, busline_sql.format(busline_name))
-                print busline_obj1
                 if not busline_obj1:
                     d = {
                         'line_no': busline_name,
@@ -143,8 +141,6 @@ class GetStationBusiness(object):
                             sql_cur, station_name_sql.format(
                                 station_name, company_id))
                         if station_name_obj:
-                            print "----------------------------"
-                            print station_name_obj
                             patch = station_name_obj[0]
                         else:
                             patch = str(time.time()).replace('.', '')
@@ -197,7 +193,6 @@ class GetStationBusiness(object):
                             'number': patch,
                             'company_id': company_id
                         }
-                        print d
                         db.insert(sql_cur, d, table_name='bus_station')
                         station_obj = db.get(
                             sql_cur, station_sql.format(lng, lat))
