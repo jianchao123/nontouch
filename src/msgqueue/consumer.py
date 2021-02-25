@@ -33,8 +33,8 @@ def start_subscriber():
                              exchange_type='topic')
 
     # 声明消息队列, durable消息队列持久化
-    channel.queue_declare(queue="bus_queue", durable=True)
-    channel.queue_declare(queue='heartbeat_queue', durable=True)
+    channel.queue_declare(queue="bus_queue", durable=False)
+    channel.queue_declare(queue='heartbeat_queue', durable=False)
 
     # 绑定交换机和队列(一个交换机可以绑定多个队列)
     # routing_key路由器(绑定到队列上),携带该路由的消息都将被分发到该消息队列
@@ -75,5 +75,4 @@ def start_subscriber():
 
 
 # 订阅者启动
-if __name__ == "__main__":
-    start_subscriber()
+start_subscriber()
