@@ -75,4 +75,5 @@ def start_subscriber():
 
 
 # 订阅者启动
-start_subscriber()
+if __name__ == "__main__":
+    start_subscriber()
