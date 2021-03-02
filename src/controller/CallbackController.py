@@ -185,7 +185,7 @@ responses:
 
 
 @bp.route('/qrcode-callback/', methods=['POST'])
-@post_require_check([])
+@post_require_check(['longitude'])
 def qrcode_callback(args):
     """
 二维码订单回调
@@ -243,7 +243,7 @@ responses:
               type: number
               description: 用户余额
     """
-    data = request.values.to_dict()
+    data = args
     longitude = data["longitude"]
     latitude = data["latitude"]
     # 验证签名
