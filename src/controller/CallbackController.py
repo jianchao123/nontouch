@@ -244,6 +244,7 @@ responses:
               description: 用户余额
     """
     data = args
+    print data
     longitude = data["longitude"]
     latitude = data["latitude"]
     # 验证签名
