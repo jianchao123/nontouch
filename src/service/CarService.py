@@ -141,6 +141,8 @@ class CarService(object):
             return -4
         car.status = 2  # 已绑线
         car.route_id = route_id
+        route_2 = BusRoute.query.filter(BusRoute.group_no == route.group_no).first()
+        car.route_id_1 =route_2.id
         try:
             db.session.commit()
             return pk

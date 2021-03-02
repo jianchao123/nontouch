@@ -25,7 +25,8 @@ class BusCar(db.Model):
 	buy_date = db.Column(db.Date)			# 购买日期
 	status = db.Column(db.Integer)			# 状态
 	company_id = db.Column(db.Integer)		# 所属公司
-	route_id = db.Column(db.Integer)		# 线路id
+	route_id = db.Column(db.Integer)		# 去程线路id
+	route_id_1 = db.Column(db.Integer)		# 返程线路id
 	is_servicing = db.Column(db.Integer)	# 是否营运中
 
 

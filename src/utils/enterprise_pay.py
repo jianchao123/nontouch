@@ -1,18 +1,17 @@
 # coding:utf-8
-import ujson
 import OpenSSL
 from datetime import datetime
 import hashlib
-import textwrap
+import urllib
+import json
 import base64
 import requests
-import json
 from alipay.aop.api.util.SignatureUtils import *
 
 
 class test():
 
-    rsaPrivateKey = 'MIIEowIBAAKCAQEAjpMriEdc+pwRLgPhwWENPfnVpMQn96B3cKla6OPc9a0qF5PpBQJu8CQkip0jvN6vDPOMB35/zeDH8gp6XkQBv0P69H+nYy3qKWfgCWMPMPW4hm3GcnEv+fp41uxsWP8riEoaOCKqNz+bOanTygfrL3u+5SiYTHOYmh0dXcnG1d3zlFH97kpIxjD/kheD2Twltm/3E3Mh5eliSngr+6Wms19CGI4pkbkNy22f8EpH+/yNirij0emuKyCBDM1AIVfUgH67Iz5Hm/7IPzW4ueZzV14hrOrxExGbhooY3tV8fN9yvIPM2gGWnISgi0gOsM0/fpD/NYoY1UpaXhPXu5jyiQIDAQABAoIBAB8z+FgH/kJeu6fNc7AF1IcW0XoQ8ApS1TET73B+xhIChu7IETxmbu8hidnIUFT6i2cTOjc9qSzeoAPJ5UQSMCuy7g5qjbC4EMJlGHQVePKnJG5PQhozyWM1PRMUhRXpKpbWWOymMYiL5CX3lAFoQEGRHJM8kjBRMDmyW4X2Lg0KBagyzdfsGxvwanS2WRquLOhQ7IhOa5LGSR1dBKKuoUj+z06x0pE+cf+1YAKh797vKW5hylx0QjfIWOgKC9iH+Ft7nPc9LG6k5DL4Gc0hzJXqGeEairzj45s1sIbN+SMf8uhBtI/ciBqGoU6ZsChHjPuqrR39QCeGiMjfbdtNbgECgYEAxGEXYV4fkbVgldZe3yNM5gKGo6tutSITPChW/maW8QtuvlVTX200KAn/oDFbmYCq460aJGmZz45GT95OOpXlX2p42TvtWwKXYIFsS9GPvv6d8d4KlevKxVShRB0QPCPbephtLiiEQ0rtJpjf2F9aTAH13ggu7WhUedmcJ37c0kECgYEAudxRFP3K9S1qcBpW2up1HpE8JSy+VhN/Hzt0QzO5qZRN9rKOkMI+1ovFSGgZxssniOPTkM4pcqEEzUbueCOgRrm/RBu3c5KCN2R3ynJwaUgDtgZOW9eAOnc1rFtrMHFpq0gvTrjlHVylBrsvIyG1roQ7u83XtqEnogXY0wvlfkkCgYEAqajoNirHQ29cHpeyJz2sNhuAju6RGtRxocuIPQoM5ftmlfHJsev634yj2JZL+PZ8rW7j4wmI5RSaEm6RT3QpUqH9/lAT5Ej811d5ZJeMhQodEtUueA/ag1l2ag5h9FNWTzhZO0Ot4SVedbYlzh2zOW+IJ2cSg/Fa6lri2gx0YwECgYA2F9s5YswpI3iw+9l/iXFg3iBFKYqT/sSm0GT8EhfdNR6jyEAZ/Y7QXomikzm9U+9DthsjL/18MUT2gchyCtxg+TqjlfWEm4Vunb0HnNr+qUj7N0ajEEtvuLZUXZ8K0FdS1IWAQevc6dPV67DCZtM74ZyJAlXf/3NLgqwicHnwkQKBgDHbGMUZPUOgw9REcm0ZGepZOK/Synw0qvX+oUzYAvPD1BYBwmhK3eOYBrLtamsu/9S/5S2T0h1BY6nHv/E/mk8Xqx3Dy0W7oFOzbjVDIRFWVK9jq6xoWGHv9YcXM+WoZJWpGDqKkPJvKR1WZ1mjhLDJVNObxklYBeukBNjDMDgz'
+    rsaPrivateKey = 'MIIEogIBAAKCAQEAhnoMJfypnKSbU1ngv68UsLxpq4kxz048eeeljgevcx9WQoHg/LBnGN5peqeohVMnlyMDNk77XHeZPh1Sf0I24rlZZJFRsJ8HAUtDM4cDsdSH7bZ7VNpzMW4bTSUFp2gpbb9Ch/F0PYkkRpkxwKsv/qptaoe4GuRE+cGEu2sDvAskTckb4bfkX1Be0GZFPSZyjwu9lqFqdCazY7N06MAG40OSa2DPMAnxv2Mc6O42HfdxsDpQeVV6wfqGVsGPr9W5eZqkOOSpS2wYStmNa5Uhm2OCnLOzEp5uRtrLtCkigrBBdit9/ox8ezDNvF3XDDuEEmkjfy0GiTr88uvHC4ta/wIDAQABAoIBAG+ms6Fyhyycaq4oqHbeGbKnrKCUdzukvIeGcilbbiuKMCdmCHQkzmSSfUcuHrgbk3pjwo37w61BS4WL+OvaARH7TCI4mXeogbtsTq5gggvK5tTSNtH70bqPrbE+dNRKomMRcl7GdXmF/Q10sh9CwsWRoOjbKFuDfVVUfCzTrDUaYsTtBjnwvKXqNItirUHtjWfHUmGXWMkikTwCY8xt/B0CGuZznGbr/JDAZZh9R7u07+oRJ3Y4SGkXMrDgvB9Ls6cOytF0sNtMavsM2HeDaF0iNL1+ekFgSUBKLBBmOojbBJvPkWUV+gw9nHcntTIrG4VbReRoSTt0+7mdWJqn1NECgYEAwMYwZhh4bghei+5ulGgFuGNVcd8IUKufZO9KAkrLDMHRgbWVm0omRjixFd/vIflgSscbJEJ32CYjdn9RdJ59LQa5eNPjF8cm+kJ2AM9OufQ25yT+xh2lmUPC0+01XXtDot2tt5yV2r4SqpZSux42s7xG7tibartVwxsHic3OCtcCgYEAspUOzH8EMsfrsPkD3kvlSSbIZOvFOFyqZI9HIJ5fOg3h1PnU4Y/ue+V7e8xhgYFNz7GdXa7fCMQfwsXGNR9gVdKryjdzx5fdMBn+sOCznMDJ+jMGkYZ81J06mkbdIqc+CRfnnLlCKU4pjWu4VPm8p1ivP5mictm+5TrqvrAYlBkCgYASt2tdjkSrEj7zwRuVZyAfDe3u12O8SV15dE4wOMjMHUlVGadD44ghy0FOSWazWr4BpKE6/QUbxGAvEh97fiPTKlL5q0DiPyDGrYs9euM+5Lor6QiffaNlZRHWd7J1uBESEAncyOQ3z7qKO3we1Mkk3EPazscQLs4d2lL6CzRVEwKBgDOIkByzCqMczgbj1RnxDNlvN6Tn5KG/G+yo6/2dth0qpGCxN51fy5I1Rs0SzZBxn+KvfpnqPLJq5j9ukyQBSet6P9i6585RJKMc3UJtlWdGuwJYdyzHgn5YYPDkQiwd1ukI3O19CHqi85q72xWqe6ZPEUNpMleyPkQoHFWqu20BAoGAH+4vzq77ENGImTFI33t3VIXU2w4i44zksJUqR7vDzy/lOly6mDYkq/jM4JBByxvJ1uuF5k4EYYacLdW/A/IqbB6PPci8AVyIiHNhcVkk3xyAWjy5jOiQgtvCZIxbW6rFG84qiFw2gi3H7e1z74rItoLsvenrfhtZRSy1FdwkxwU='
 
     def __init__(self, app_id='2021002127658564'):
         self.gatewayUrl = 'https://openapi.alipay.com/gateway.do'
@@ -23,8 +22,6 @@ class test():
         self.postCharset = 'UTF-8'
         self.format = 'json'
         self.apiVersion = '1.0'
-        #self.appCertSN = self.getCertSN('/home/jianchao/code/nontouch_1/doc/credential/appCertPublicKey_2021002127658564.crt')
-        #self.alipayRootCertSN = self.getRootCertSN('/home/jianchao/code/nontouch_1/doc/credential/alipayRootCert.crt')
 
     def getCertSN(self, path):
         cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, open(path).read())
@@ -63,10 +60,10 @@ class test():
         if params and isinstance(params, dict):
             for key, val in params.items():
                 string.append("{}={}".format(key, val))
-        return ','.join(string)
+        return '&'.join(string)
 
     def transfer(self, order):
-        biz_content = ujson.dumps(order)
+        biz_content = json.dumps(order)
 
         params = {
             'app_id': self.appId,
@@ -77,116 +74,51 @@ class test():
             'method': self.method,
             'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'biz_content': biz_content,
-            'app_cert_sn': 'f6b8233ca7ca50311154f5a5f9c5ab7b', #self.appCertSN,
+            'app_cert_sn': '8975ff37f6bdc0a9a80c1f74987ef3b9', #self.appCertSN,
             'alipay_root_cert_sn': '687b59193f3f462dd5336e5abf83c5d8_02941eef3187dddf3d3b83462e1dfcf6' #self.alipayRootCertSN
         }
-# "alipay_root_cert_sn,app_cert_sn,app_id,biz_content,charset,format,method,sign_type,timestamp,version"
-        params['sign'] = self.sign(params, self.signType)
-        res = self.send_request_data(self.gatewayUrl, params)
+        params = order_dict(params)
+        print "待签名字符串", self.array2string(params)
+        params['sign'] = sign_with_rsa2(self.rsaPrivateKey, json.dumps(params), "utf8")
+        print "签名串", urllib.quote(params['sign'])
+        res = self.send_data(self.gatewayUrl, params)
         print(res.content)
 
-    def send_request_data(self, url, params):
+    def send_data(self, url, params):
+
         kv_list = []
         for k, v in params.items():
             kv_list.append(k + "=" + v)
+        u = url + "?" + "&".join(kv_list)
+        print u
+        return requests.get(u)
 
-        return requests.get(url + "?" + "&".join(kv_list))
 
-    def sign(self, data, signType='RSA2'):
-        content = get_sign_content(data)
-        res = "-----BEGIN RSA PRIVATE KEY-----\n{}\n-----END RSA PRIVATE KEY-----".format('\n'.join(textwrap.wrap(self.rsaPrivateKey, 64)))
-
-        if not res:
-            raise ValueError('Error: {}'.format('您使用的私钥格式错误，请检查RSA私钥配置'))
-
-        if signType == 'RSA2':
-            sign = self.openssl_sign(content, res, 'sha256')
-        else:
-            sign = self.openssl_sign(content, res)
-
-        return sign
-
-    def openssl_sign(self, content, priv_key_id, signature_alg='sha1'):
-        """
-        生成签名
-        :param content:
-        :return:
-        """
-        if not content or not priv_key_id:
-            return False
-        pkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, priv_key_id)
-        if pkey:
-            signature = OpenSSL.crypto.sign(pkey, content.encode('utf8'), signature_alg)
-            ret = base64.b64encode(signature)
-            return ret.decode('utf8').replace('\n', '')
-        return False
-
-    def alipay_sign(self, data_dict):
-
-        __pem_begin = '-----BEGIN RSA PRIVATE KEY-----\n'
-        __pem_end = '\n-----END RSA PRIVATE KEY-----'
-
-        def rsa_sign(data_dict, private_key_path):
-            """SHAWithRSA
-
-            :param content: 签名内容
-            :type content: str
-
-            :param private_key: 私钥
-            :type private_key: str
-
-            :param _hash: hash算法，如：SHA-1,SHA-256
-            :type _hash: str
-
-            :return: 签名内容
-            :rtype: str
-            """
-
-            private_key = _format_private_key(
-                open(private_key_path, 'r').read())
-            pri_key = rsa.PrivateKey.load_pkcs1(private_key.encode('utf-8'))
-            params_list = sorted(data_dict.items(), key=lambda e: e[0],
-                                 reverse=False)  # 参数字典倒排序为列表
-            print params_list
-            params_str = "&".join(
-                u"{}={}".format(k, v) for k, v in params_list)  # 待签名字符串
-            print params_str
-            sign_result = rsa.sign(params_str.encode('utf-8'), pri_key,
-                                   'SHA-256')
-            return base64.b64encode(sign_result)
-
-        def _format_private_key(private_key):
-            """对私进行格式化，缺少"-----BEGIN RSA PRIVATE KEY-----"和"-----END RSA PRIVATE KEY-----"部分需要加上
-
-            :param private_key: 私钥
-            :return: pem私钥字符串
-            :rtype: str
-            """
-            if not private_key.startswith(__pem_begin):
-                private_key = __pem_begin + private_key
-            if not private_key.endswith(__pem_end):
-                private_key = private_key + __pem_end
-            return private_key
-
-        sign = rsa_sign(data_dict, '/home/jianchao/code/nontouch_1/doc/credential/wgxing.com_私钥.txt')
-
-        return sign
+def order_dict(d):
+    from collections import OrderedDict
+    d2 = OrderedDict()
+    for row in sorted(d.keys(), reverse=False):
+        d2[row] = d[row]
+    return d2
 
 
 test_class = test()
-test_class.transfer({
-            'out_biz_no': str(datetime.now().strftime('%Y%m%d%H%M%S%f')),
-            'trans_amount': '0.1',
-            'product_code': 'TRANS_ACCOUNT_NO_PWD',
-            'biz_scene': 'DIRECT_TRANSFER',
-            'order_title': '测试转账',
-            'payee_info': {
-                'identity_type': 'ALIPAY_LOGON_ID',
-                'identity': '18508217537',
-                'name': '简超'
-            },
-            'remark': '测试转账'
-        })
+
+p = {
+    'out_biz_no': str(datetime.now().strftime('%Y%m%d%H%M%S%f')),
+    'trans_amount': '0.1',
+    'product_code': 'TRANS_ACCOUNT_NO_PWD',
+    'biz_scene': 'DIRECT_TRANSFER',
+    'order_title': '测试转账',
+    'payee_info': order_dict({
+        'name': '简超',
+        'identity_type': 'ALIPAY_LOGON_ID',
+        'identity': '18508217537'
+    }),
+    'remark': '测试转账'
+}
+data = order_dict(p)
+test_class.transfer(data)
 
 
 

@@ -20,4 +20,4 @@ class BusRoute(db.Model):
 	status = db.Column(db.Integer)				# 状态
 	round_trip = db.Column(db.Integer)  		# 往返
 	company_id = db.Column(db.Integer)			# 所属公司
-
+	group_no = db.Column(db.String(32))			# 分组号

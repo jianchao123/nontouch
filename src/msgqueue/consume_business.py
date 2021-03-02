@@ -3,6 +3,7 @@ import json
 import time
 import urllib
 import requests
+from datetime import datetime
 from msgqueue import conf
 from msgqueue import utils
 from msgqueue.db import transaction, MysqlDbUtil
@@ -82,6 +83,7 @@ class GetStationBusiness(object):
                         if row['key_name'] == key_name:
                             buslines.append(row['via_stops'])
             if buslines:
+                group_no = datetime.now().strftime('%Y%m%d%H%M%S%f')
                 go_stations = buslines[0]
                 ret_stations = buslines[1]
 
@@ -101,7 +103,8 @@ class GetStationBusiness(object):
                         'round_trip': 1,
                         'start_time': '1937-1-1 07:00:00',
                         'end_time': '1937-1-1 23:00:00',
-                        'company_id': company_id
+                        'company_id': company_id,
+                        'group_no': group_no
                     }
                     db.insert(sql_cur, d, table_name='bus_route')
                     busline_obj1 = db.get(sql_cur,
@@ -122,7 +125,8 @@ class GetStationBusiness(object):
                         'round_trip': 2,
                         'start_time': '1937-1-1 07:00:00',
                         'end_time': '1937-1-1 23:00:00',
-                        'company_id': company_id
+                        'company_id': company_id,
+                        'group_no': group_no
                     }
                     db.insert(sql_cur, d, table_name='bus_route')
                     busline_obj2 = db.get(
