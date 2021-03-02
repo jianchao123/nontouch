@@ -390,7 +390,8 @@ class CallbackService(object):
             return -11  # 余额不足
         elif order_ret == -2:
             return -15  # 提交失败
-
+        userprofile = UserProfile.query.filter(
+            UserProfile.mobile == mobile).first()
         ret_data = {"mobile": userprofile.mobile,
                     "amounts": str(userprofile.balance)}
         return ret_data
