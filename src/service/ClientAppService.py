@@ -31,7 +31,7 @@ from database.Order import Order
 from ext import cache
 from utils import smscode
 from utils.validators import mobile_validate
-from utils.tools import md5_encrypt, gen_token
+from utils.rest import md5_encrypt, gen_token
 from utils import scan
 from utils import face
 from ext import conf

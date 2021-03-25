@@ -7,7 +7,7 @@ from core.AppError import AppError
 from utils.defines import GlobalErrorCode, SubErrorCode
 from service.AdminUserService import AdminUserService
 from ext import conf
-from utils.tools import gen_token, md5_encrypt
+from utils.rest import gen_token, md5_encrypt
 
 
 try:

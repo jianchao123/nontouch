@@ -11,7 +11,7 @@ from database.UserRole import UserRole
 from database.Roles import Roles
 from database.UserPermissions import UserPermissions
 
-from utils.tools import md5_encrypt
+from utils.rest import md5_encrypt
 
 
 class CompanyService(object):

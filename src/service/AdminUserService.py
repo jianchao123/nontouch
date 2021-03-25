@@ -12,7 +12,7 @@ from database.UserRole import UserRole
 from database.Company import Company
 from database.Roles import Roles
 
-from utils.tools import md5_encrypt
+from utils.rest import md5_encrypt
 from ext import conf
 from ext import cache
 

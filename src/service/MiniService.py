@@ -18,7 +18,7 @@ from utils.oss import upload_net_stream_image
 
 from ext import conf
 from ext import cache
-from utils.tools import md5_encrypt
+from utils.rest import md5_encrypt
 
 
 class MiniService(object):

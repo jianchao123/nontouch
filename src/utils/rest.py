@@ -1,4 +1,5 @@
 # coding:utf-8
+"""其他的工具函数"""
 import re
 import json
 import decimal
