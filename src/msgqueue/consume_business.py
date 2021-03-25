@@ -4,15 +4,15 @@ import time
 import urllib
 import requests
 from datetime import datetime
-from msgqueue import conf
-from msgqueue import utils
+from msgqueue import config
+from msgqueue import tools
 from msgqueue.db import transaction, MysqlDbUtil
 
 
 class HeartBeatConsumer(object):
 
     def __init__(self):
-        self.logger = utils.get_logger(conf.log_path)
+        self.logger = tools.get_logger(config.log_path)
 
     def heartbeat_callback(self, ch, method, properties, body):
         print "------------heartbeat-------------deliver_tag={}".\
@@ -24,7 +24,7 @@ class HeartBeatConsumer(object):
 class BusConsumer(object):
 
     def __init__(self):
-        self.logger = utils.get_logger(conf.log_path)
+        self.logger = tools.get_logger(config.log_path)
         self.get_station_business = GetStationBusiness(self.logger)
 
     def callback(self, ch, method, properties, body):

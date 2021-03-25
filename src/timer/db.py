@@ -7,17 +7,17 @@ import MySQLdb
 import redis
 from DBUtils.PooledDB import PooledDB
 from redis import ConnectionPool
-from timer import conf
-from timer import t_logging
+from timer import config
+from timer import tools
 
 # main
-logger = t_logging.get_logger(conf.log_path)
+logger = tools.get_logger(config.log_path)
 
 # mysql
-mysql_pool = PooledDB(MySQLdb, 5, **conf.mysql_conf)
+mysql_pool = PooledDB(MySQLdb, 5, **config.mysql_conf)
 
 # redis
-rds_pool = ConnectionPool(**conf.redis_conf)
+rds_pool = ConnectionPool(**config.redis_conf)
 rds_conn = redis.Redis(connection_pool=rds_pool)
 
 

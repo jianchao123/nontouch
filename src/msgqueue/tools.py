@@ -6,7 +6,7 @@ import oss2
 import zipfile
 from xlutils.copy import copy
 import logging
-import conf
+import config
 
 
 def get_logger(log_path):
@@ -72,15 +72,15 @@ def zip_dir(dir_path, out_full_name):
 
 def delete_oss_file(files):
     """删除oss文件"""
-    auth = oss2.Auth(conf.OSSAccessKeyId, conf.OSSAccessKeySecret)
-    bucket = oss2.Bucket(auth, conf.OSSEndpoint, conf.OSSBucketName)
+    auth = oss2.Auth(config.OSSAccessKeyId, config.OSSAccessKeySecret)
+    bucket = oss2.Bucket(auth, config.OSSEndpoint, config.OSSBucketName)
     return bucket.batch_delete_objects(files)
 
 
 def upload_zip(oss_key, local_path):
     """上传zip到oss"""
-    auth = oss2.Auth(conf.OSSAccessKeyId, conf.OSSAccessKeySecret)
-    bucket = oss2.Bucket(auth, conf.OSSEndpoint, conf.OSSBucketName)
+    auth = oss2.Auth(config.OSSAccessKeyId, config.OSSAccessKeySecret)
+    bucket = oss2.Bucket(auth, config.OSSEndpoint, config.OSSBucketName)
     with open(local_path, 'rb') as file_obj:
         bucket.put_object(oss_key, file_obj)
 
@@ -106,6 +106,6 @@ def safe_str(obj):
 
 def oss_file_exists(oss_key):
     """文件是否存在"""
-    auth = oss2.Auth(conf.OSSAccessKeyId, conf.OSSAccessKeySecret)
-    bucket = oss2.Bucket(auth, conf.OSSEndpoint, conf.OSSBucketName)
+    auth = oss2.Auth(config.OSSAccessKeyId, config.OSSAccessKeySecret)
+    bucket = oss2.Bucket(auth, config.OSSEndpoint, config.OSSBucketName)
     return bucket.object_exists(oss_key)

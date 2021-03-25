@@ -1,6 +1,6 @@
 # coding: utf-8
 import os
-from utils import get_logger
+from tools import get_logger
 
 project_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.dirname(project_dir)
