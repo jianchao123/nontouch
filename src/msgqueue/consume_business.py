@@ -12,7 +12,8 @@ from selenium import webdriver
 import os
 
 dir_path = os.path.dirname(__file__)
-driver = webdriver.PhantomJS(executable_path=dir_path + "/phantomjs")
+driver = webdriver.PhantomJS(executable_path=dir_path + "/phantomjs",
+                             service_log_path='/data/logs/phantomjs')
 
 
 class HeartBeatConsumer(object):
