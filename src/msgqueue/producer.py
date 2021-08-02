@@ -41,4 +41,4 @@ def heartbeat():
 # 测试用户创建
 if __name__ == "__main__":
     # generate_create_user_msg(12)
-    generate_get_station_msg('201,202,203,209,5,6,7,8', 511302, 9)
+    generate_get_station_msg('蓬安201路,蓬安202路,蓬安203路,蓬安209路,蓬安5路,蓬安6路,蓬安7路,蓬安8路', "南充", 9)
