@@ -8,6 +8,12 @@ from msgqueue import config
 from msgqueue import tools
 from msgqueue.db import transaction, MysqlDbUtil
 
+from selenium import webdriver
+import os
+
+dir_path = os.path.dirname(__file__)
+driver = webdriver.PhantomJS(executable_path=dir_path + "/phantomjs")
+
 
 class HeartBeatConsumer(object):
 
@@ -43,6 +49,21 @@ class GetStationBusiness(object):
     def __init__(self, logger):
         self.logger = logger
 
+    @staticmethod
+    def get_bus_data(city, line):
+
+        driver.get(dir_path + "/search.html")
+        time.sleep(2)
+        driver.find_element_by_id('CityName').send_keys(city)
+        driver.find_element_by_id('BusLineName').send_keys(line)
+        time.sleep(1)
+        driver.find_element_by_id('search').click()
+        time.sleep(1)
+        data1 = driver.find_element_by_id('infobox1').text
+        data2 = driver.find_element_by_id('infobox2').text
+
+        return json.loads(data1), json.loads(data2)
+
     @transaction(is_commit=True)
     def get_station(self, sql_cur, data):
         print "=======================1"
@@ -57,43 +78,26 @@ class GetStationBusiness(object):
                       "WHERE `longitude`={} AND `latitude`={} LIMIT 1"
 
         busline_sql = "SELECT `id` FROM `bus_route` " \
-                      "WHERE `line_no`='{}' LIMIT 1"
-        req_url = "https://ditu.amap.com/service/poiBus?" \
-                  "query_type=TQUERY&pagesize=20&pagenum=1&qii=true&cluster_state=5&" \
-                  "need_utd=true&utd_sceneid=1000&div=PC1000&addr_poi_merge=true&" \
-                  "is_classify=true&zoom=9.72&" \
-                  "city={}&src=mypage&callnative=0&innersrc=uriapi&keywords={}"
+                      "WHERE `line_no`='{}' and `company_id`={} LIMIT 1"
+
         relation_sql = "SELECT `id` FROM `route_station_relation` " \
                        "WHERE `code`={} AND `round_trip`={} AND " \
                        "`bus_route_id`={} AND `bus_station_id`={}"
 
         for lineno in route_ids.split(","):
-            key_name = str(lineno) + "路"
-            url = req_url. \
-                format(district_code, urllib.quote(key_name.encode('utf8')))
-            res = requests.get(url)
-            d = json.loads(res.content)
-            print d
-            buslines = []
-            if int(d['status']) == 1:
-                more_data = d['busMoreData']
-                if int(more_data['total']) > 1:
-                    busline_list = more_data['busline_list']
-                    for row in busline_list:
-                        if row['key_name'] == key_name:
-                            buslines.append(row['via_stops'])
-            if buslines:
+            go_stations, ret_stations = \
+                GetStationBusiness.get_bus_data(district_code, lineno)
+            if go_stations and ret_stations:
                 group_no = datetime.now().strftime('%Y%m%d%H%M%S%f')
-                go_stations = buslines[0]
-                ret_stations = buslines[1]
 
                 # 添加线路
                 # go_stations round_trip为1
                 busline_name = "{}路({}--{})".format(
                     str(lineno), go_stations[0]['name'],
                     go_stations[-1]['name'])
-
-                busline_obj1 = db.get(sql_cur, busline_sql.format(busline_name))
+                busline_obj1 = \
+                    db.get(sql_cur, busline_sql.format(busline_name, company_id))
+                print "busline_obj1={}".format(busline_obj1)
                 if not busline_obj1:
                     d = {
                         'line_no': busline_name,
@@ -108,14 +112,16 @@ class GetStationBusiness(object):
                     }
                     db.insert(sql_cur, d, table_name='bus_route')
                     busline_obj1 = db.get(sql_cur,
-                                          busline_sql.format(busline_name))
+                                          busline_sql.format(busline_name, company_id))
+                    print "busline_obj1={}".format(busline_obj1)
 
                 # ret_stations round_trip为2
                 busline_name = "{}路({}--{})".format(
                     str(lineno), ret_stations[0]['name'],
                     ret_stations[-1]['name'])
 
-                busline_obj2 = db.get(sql_cur, busline_sql.format(busline_name))
+                busline_obj2 = db.get(sql_cur, busline_sql.format(busline_name, company_id))
+                print "busline_obj2={}".format(str(busline_obj2))
                 if not busline_obj2:
                     d = {
                         'line_no': busline_name,
@@ -130,7 +136,7 @@ class GetStationBusiness(object):
                     }
                     db.insert(sql_cur, d, table_name='bus_route')
                     busline_obj2 = db.get(
-                        sql_cur, busline_sql.format(busline_name))
+                        sql_cur, busline_sql.format(busline_name, company_id))
 
                 # 添加站点
                 for station in go_stations:
