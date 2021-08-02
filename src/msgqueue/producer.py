@@ -9,9 +9,10 @@ import pika
 queue_conn = pika.BlockingConnection(pika.ConnectionParameters(
     host='localhost', heartbeat=0))
 channel = queue_conn.channel()
-channel.exchange_declare(exchange='user_exchange', exchange_type='topic')
-channel.exchange_declare(exchange='device_exchange', exchange_type='topic')
-channel.exchange_declare(exchange='excel_exchange', exchange_type='topic')
+# channel.exchange_declare(exchange='user_exchange', exchange_type='topic')
+# channel.exchange_declare(exchange='device_exchange', exchange_type='topic')
+# channel.exchange_declare(exchange='excel_exchange', exchange_type='topic')
+channel.exchange_declare(exchange='bus_exchange', exchange_type='topic')
 
 
 def _publish_msg(exchange, routing_key, message):
@@ -40,4 +41,4 @@ def heartbeat():
 # 测试用户创建
 if __name__ == "__main__":
     # generate_create_user_msg(12)
-    generate_get_station_msg('1,19,14', 511302, 8)
+    generate_get_station_msg('201,202,203,209,5,6,7,8', 511302, 8)
