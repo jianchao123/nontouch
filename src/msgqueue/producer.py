@@ -41,4 +41,4 @@ def heartbeat():
 # 测试用户创建
 if __name__ == "__main__":
     # generate_create_user_msg(12)
-    generate_get_station_msg('201,202,203,209,5,6,7,8', 511302, 8)
+    generate_get_station_msg('201,202,203,209,5,6,7,8', 511302, 9)
