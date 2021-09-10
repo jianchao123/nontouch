@@ -52,12 +52,6 @@ responses:
             access_token:
               type: string
               description: 访问token
-            group_id:
-              type: integer
-              description: 组id
-            expires_in:
-              type: integer
-              description: 过期时间
     """
     ret = ClientDeviceService.get_baidu_access_token()
     if ret == -1:

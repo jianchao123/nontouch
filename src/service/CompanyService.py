@@ -10,6 +10,7 @@ from database.AdminUser import AdminUser
 from database.UserRole import UserRole
 from database.Roles import Roles
 from database.UserPermissions import UserPermissions
+from database.CompanyPermission import CompanyPermission
 
 from utils.rest import md5_encrypt
 
@@ -26,9 +27,9 @@ class CompanyService(object):
         if name:
             query = query.filter(Company.name == name)
         count = query.count()
-        sets = query.offset(offset).limit(limit).all()
+        company_set = query.offset(offset).limit(limit).all()
         results = []
-        for row in sets:
+        for row in company_set:
             d = defaultdict()
             d['id'] = row.id
             d['province'] = row.province_id
@@ -45,26 +46,23 @@ class CompanyService(object):
             d['mobile'] = user.mobile
             d['name'] = row.name
             d['status'] = row.status
-            d['permissions'] = row.permissions
+            pid_list = CompanyService.get_company_permission_id_list(row.id)
+            d['permissions'] = \
+                ",".join([str(pk) for pk in pid_list])
             d['level'] = row.level
             d['parent_id'] = row.parent_id
             results.append(d)
         return {'count': count, 'results': results}
 
     @staticmethod
-    def check_commit_permission(user_company_permissions, commit_permissions):
+    def check_commit_permission(company_id, commit_permission_ids):
         """
         检查提交的权限集合
         """
-        user_company_permission_ids = \
-            [int(row['permission_id'])
-             for row in json.loads(user_company_permissions)]
-        user_company_permission_ids.sort()
-        commit_permission_ids = \
-            [int(row['permission_id'])
-             for row in json.loads(commit_permissions)]
         commit_permission_ids.sort()
-        return set(commit_permission_ids) - set(user_company_permission_ids)
+        company_permission_id_list = \
+            CompanyService.get_company_permission_id_list(company_id)
+        return set(commit_permission_ids) - set(company_permission_id_list)
 
     @staticmethod
     def company_add(company_id, area_id, city_id, province_id, house_number,
@@ -75,8 +73,10 @@ class CompanyService(object):
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
         permissions_tmp = json.loads(permissions)
+        # 子公司权限需要继承父公司
         if CompanyService.check_commit_permission(
-                login_user_company.permissions, permissions):
+                login_user_company.id,
+                [int(row['permission_id']) for row in json.loads(permissions)]):
             return -10
         permission_ids = [row["permission_id"] for row in permissions_tmp]
 
@@ -100,7 +100,6 @@ class CompanyService(object):
         company.line_nos = line_nos
         company.name = name
         company.status = 1
-        company.permissions = permissions
         company.admin_user_id = new_user_id
         company.level = login_user_company.level + 1
         company.parent_id = company_id
@@ -136,15 +135,23 @@ class CompanyService(object):
         user_role.role_id = new_admin_role_id
         db.session.add(user_role)
 
-        # 为该公司初始化帐号添加权限
-        query_set = []
+        # 添加公司权限
+        bulk_obj = []
+        for permission_id in permission_ids:
+            company_permission = CompanyPermission()
+            company_permission.company_id = company.id
+            company_permission.permission_id = permission_id
+            bulk_obj.append(company_permission)
+        db.session.bulk_save_objects(bulk_obj)
 
+        # 为该公司初始化帐号添加权限
+        bulk_obj = []
         for permission_id in permission_ids:
             user_permission = UserPermissions()
             user_permission.user_id = new_user_id
             user_permission.permission_id = permission_id
-            query_set.append(user_permission)
-        db.session.bulk_save_objects(query_set)
+            bulk_obj.append(user_permission)
+        db.session.bulk_save_objects(bulk_obj)
 
         try:
             db.session.commit()
@@ -161,39 +168,49 @@ class CompanyService(object):
             db.session.close()
         return new_company_id
 
-    @staticmethod
-    def _get_permission_str(cur_permissions, new_permissions):
-        result_permissions = []
-        new_permission_ids = [row["permission_id"] for row in new_permissions]
-        old_permission_ids = [row["permission_id"] for row in cur_permissions]
-        delete_permission_ids = list(
-            set(old_permission_ids) - set(new_permission_ids))
-        # 删除权限
-        func = lambda obj: False if obj["permission_id"
-                                        ] in delete_permission_ids else True
-        result_permissions += list(filter(func, cur_permissions))
+    # @staticmethod
+    # def _get_permission_str(company_permission_id_list, new_permissions):
+    #     d = []
+    #     new_permission_ids = [row["permission_id"] for row in new_permissions]
+    #
+    #     delete_permission_ids = list(
+    #         set(company_permission_id_list) - set(new_permission_ids))
+    #     # 删除权限
+    #     func = lambda obj: False if obj["permission_id"] in delete_permission_ids else True
+    #     d += list(filter(func, cur_permissions))
+    #
+    #     # 增加权限
+    #     add_permission_ids = list(
+    #         set(new_permission_ids) - set(old_permission_ids))
+    #     func = lambda obj: True if obj["permission_id"
+    #                                    ] in add_permission_ids else False
+    #     d += list(filter(func, new_permissions))
+    #     return json.dumps(d), delete_permission_ids, add_permission_ids
 
-        # 增加权限
-        add_permission_ids = list(
-            set(new_permission_ids) - set(old_permission_ids))
-        func = lambda obj: True if obj["permission_id"
-                                       ] in add_permission_ids else False
-        result_permissions += list(filter(func, new_permissions))
-        return json.dumps(result_permissions), \
-               delete_permission_ids, add_permission_ids
+    @staticmethod
+    def get_company_permission_id_list(company_id):
+        company_permissions = db.session.query(CompanyPermission).filter(
+            CompanyPermission.company_id == company_id).all()
+        company_permission_id_list = []
+        for company_permission in company_permissions:
+            company_permission_id_list.append(company_permission.permission_id)
+        company_permission_id_list.sort()
+        return company_permission_id_list
 
     @staticmethod
     def company_update(company_id, pk, area_id, city_id, province_id,
                        house_number, mobile, name, new_permissions,
                        username, password, line_nos):
         db.session.commit()
+        new_permissions = json.loads(new_permissions)
+
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
         if CompanyService.check_commit_permission(
-                login_user_company.permissions, new_permissions):
+                login_user_company.id,
+                [int(row['permission_id']) for row in json.loads(new_permissions)]):
             return -10
 
-        new_permissions = json.loads(new_permissions)
         company = db.session.query(Company).filter(Company.id == pk).first()
         if not company:
             return -1
@@ -224,29 +241,35 @@ class CompanyService(object):
             producer.generate_get_station_msg(
                 line_nos, districtcode.ad, company.id)
 
-        # 计算已有权限与当前修改权限的差集
-        cur_permissions = json.loads(company.permissions)
-        permission_str, delete_permission_ids, add_permission_ids = \
-            CompanyService._get_permission_str(cur_permissions, new_permissions)
+        # 公司原有的权限
+        company_permission_id_list = \
+            CompanyService.get_company_permission_id_list(company.id)
 
+        # 需要删除的权限id
+        new_permission_id_list = [row["permission_id"] for row in new_permissions]
+        delete_permission_ids = list(set(company_permission_id_list)
+                                     - set(new_permission_id_list))
         # 减少该公司下面所有人的权限
         admin_user_sets = db.session.query(AdminUser).filter(
             AdminUser.company_id == company.id).all()
         admin_user_ids = [row.id for row in admin_user_sets]
-
         db.session.query(UserPermissions).filter(
             UserPermissions.permission_id.in_(delete_permission_ids),
             UserPermissions.user_id.in_(admin_user_ids)).delete(
             synchronize_session=False)
 
-        # 为该公司下面的管理员增加权限
-        for user_id in admin_user_ids:
-            for permission_id in add_permission_ids:
-                user_permission = UserPermissions()
-                user_permission.user_id = user_id
-                user_permission.permission_id = permission_id
-                db.session.add(user_permission)
-        company.permissions = permission_str
+        # 删除公司所有权限
+        db.session.query(CompanyPermission).filter(
+            CompanyPermission.company_id == company.id).delete()
+        # 增加这次的所有权限
+        bulk_obj = []
+        for permission_id in new_permission_id_list:
+            company_permission = CompanyPermission()
+            company_permission.company_id = company.id
+            company_permission.permission_id = permission_id
+            bulk_obj.append(company_permission)
+        db.session.bulk_save_objects(bulk_obj)
+
         try:
             db.session.commit()
         except SQLAlchemyError:

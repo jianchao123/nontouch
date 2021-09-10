@@ -36,9 +36,30 @@ def create_app():
     创建flask app对象
     """
 
-    app = Flask(__name__)
+    # app = Flask(__name__)
+    #
+    # Swagger(app)
+    # CORS(app, supports_credentials=True)
+    #
+    # # 加载配置
+    # from config import load_config
+    # app.config.from_object(load_config())
+    #
+    # # 初始化log conf对象
+    # from ext import log, conf, cache
+    # log.init_app(app)
+    # conf.init_app(app)
+    # cache.init_app(app)
+    #
+    # from flask_sqlalchemy import SQLAlchemy
+    # SQLAlchemy(app)
+    # register_blueprints('controller', app)
+    # # from controller import bp
+    # # app.register_blueprint(bp, url_prefix='/user')
 
+    app = Flask(__name__)
     Swagger(app)
+
     CORS(app, supports_credentials=True)
 
     # 加载配置
@@ -50,12 +71,9 @@ def create_app():
     log.init_app(app)
     conf.init_app(app)
     cache.init_app(app)
-
     from flask_sqlalchemy import SQLAlchemy
     SQLAlchemy(app)
     register_blueprints('controller', app)
-    # from controller import bp
-    # app.register_blueprint(bp, url_prefix='/user')
 
     return app
 
@@ -118,4 +136,4 @@ if __name__ == '__main__':
     # app.register_blueprint(settlement, url_prefix='/api_backend/v1')
     # app.register_blueprint(userprofile, url_prefix='/api_backend/v1')
     # app.register_blueprint(mini, url_prefix='/api_backend/v1')
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5001)

@@ -70,10 +70,9 @@ class DevelopmentConfig(Config):
     }
 
     # 百度人脸识别
-    BAIDU_APP_ID = '16019070'
-    BAIDU_API_KEY = '8NKZFsIy7on2pBUj7zB65Hlq'
-    BAIDU_SECRET_KEY = '1tVgfs6uUIb9vDOFwAMLhX7PBBW0fr8G'
-    BAIDU_GROUP_ID = "dev"
+    BAIDU_APP_ID = '24831558'
+    BAIDU_API_KEY = 'Si8bUb5dIqK4ZwtiKL5tFkKP'
+    BAIDU_SECRET_KEY = 'XNRNi6MpIZjBqfSN0adcOHIPOk2GQVEk'
 
     # 临时目录
 

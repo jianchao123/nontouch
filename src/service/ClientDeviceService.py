@@ -9,22 +9,17 @@ from database.BusCar import BusCar
 from database.BusRoute import BusRoute
 from database.PassengerWeeklyCount import PassengerWeeklyCount
 from database.FaceImg import FaceImg
-from ext import conf
+from ext import cache
 
 
 class ClientDeviceService(object):
 
     @staticmethod
     def get_baidu_access_token():
-        # client_id 为官网获取的AK, client_secret 为官网获取的SK
-        host = 'https://aip.baidubce.com/oauth/2.0/token?' \
-               'grant_type=client_credentials&client_id={}&client_secret={}'
-        response = requests.get(host.format(conf.config['BAIDU_API_KEY'],
-                                            conf.config['BAIDU_SECRET_KEY']))
-        d = response.json()
-        if "error" in d:
-            return -1
-        d["group_id"] = conf.config['BAIDU_GROUP_ID']
+        access_token = cache.get('BAIDU_ACCESS_TOKEN')
+        d = {
+            'access_token': access_token,
+        }
         return d
 
     @staticmethod

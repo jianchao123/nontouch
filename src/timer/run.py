@@ -15,8 +15,10 @@ from timer.RestTimer import ActivitiesTimer
 from timer.RestTimer import UserData
 from timer.RestTimer import IdentitiesData
 from timer.RestTimer import StatisticsData
+from timer.RestTimer import EveryFewMinutesExe
 
 if __name__ == "__main__":
+    every_few_minutes_exe = EveryFewMinutesExe()
     activity_timer = ActivitiesTimer()
     user_data = UserData()
     identities_data = IdentitiesData()
@@ -41,5 +43,9 @@ if __name__ == "__main__":
                   'interval', seconds=10)
     sched.add_job(statistics_data.statistics_passenger_flow,
                   'interval', seconds=60 * 60)
+
+    # 每五分钟执行
+    sched.add_job(func=every_few_minutes_exe.every_few_minutes_execute,
+                  trigger='cron', day="*", hour="*", minute="*/5")
 
     sched.start()

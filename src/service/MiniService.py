@@ -134,12 +134,12 @@ class MiniService(object):
             res = requests.get(private_url)
             image = base64.b64encode(res.content).decode("utf8")
             baidu_res = rgn_client.addUser(
-                image, "BASE64", conf.config['BAIDU_GROUP_ID'], mobile)
+                image, "BASE64", user.mobile, mobile)
             # 已存在百度人脸库,更新
             print(baidu_res)
             if baidu_res["error_code"] == 223105:
                 baidu_res = rgn_client.updateUser(
-                    image, "BASE64", conf.config['BAIDU_GROUP_ID'], mobile)
+                    image, "BASE64", user.mobile, mobile)
             elif baidu_res["error_code"] == 222203:
                 return -10
         except:
@@ -157,7 +157,7 @@ class MiniService(object):
             face_img.user = user
             face_img.img = ""  # bytes
             face_img.baidu_user_id = mobile
-            face_img.group_id = conf.config['BAIDU_GROUP_ID']
+            face_img.group_id = user.mobile
             face_img.oss_url = url
             face_img.is_sub_account = False
             face_img.face_id = baidu_res["result"]["face_token"]

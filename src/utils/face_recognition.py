@@ -1,3 +1,4 @@
+# coding:utf8
 from aip import AipFace
 import requests
 import base64
@@ -8,16 +9,16 @@ import base64
 
 
 class Setting(object):
-    BAIDU_APP_ID = '16019070'
-    BAIDU_API_KEY = '8NKZFsIy7on2pBUj7zB65Hlq'
-    BAIDU_SECRET_KEY = '1tVgfs6uUIb9vDOFwAMLhX7PBBW0fr8G'
-    BAIDU_GROUP_ID = "china"
+    BAIDU_APP_ID = '24831558'
+    BAIDU_API_KEY = 'Si8bUb5dIqK4ZwtiKL5tFkKP'
+    BAIDU_SECRET_KEY = 'XNRNi6MpIZjBqfSN0adcOHIPOk2GQVEk'
 
 
 settings = Setting()
 
 rgn_client = AipFace(settings.BAIDU_APP_ID, settings.BAIDU_API_KEY,
                      settings.BAIDU_SECRET_KEY)
+print rgn_client.f
 
 ################################## 更新 #####################################
 # 存在该user_id的用户才能更新 (同一张图片face_id一样)

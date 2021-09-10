@@ -413,12 +413,11 @@ class ClientAppService(object):
         try:
             # 向百度更新人脸
             if oss_url:
-                group_id = conf.config['BAIDU_GROUP_ID']
                 res = requests.get(oss_url)
                 image = base64.b64encode(res.content).decode("utf8")
                 # 更新人脸
                 d = face.rgn_client.updateUser(
-                    image, "BASE64", group_id, baidu_user_id)
+                    image, "BASE64", instance.group_id, baidu_user_id)
                 # 用户不存在
                 if d["error_code"] == 223103:
                     return -10
@@ -461,7 +460,7 @@ class ClientAppService(object):
         try:
             face_image.status = 10
             face.rgn_client.deleteUser(
-                conf.config['BAIDU_GROUP_ID'],
+                face_image.group_id,
                 face_image.baidu_user_id)
             db.session.commit()
             return {'id': face_image.id}
@@ -478,11 +477,12 @@ class ClientAppService(object):
         ----is_sub_account int 必须 是否子账户,取值0|1
         ----sub_account_name string 可选 子账户名字
         """
-        flag = 0
         db.session.commit()
+        user = db.session.query(UserProfile).filter(
+            UserProfile.id == user_id).first()
+        baidu_user_id = user.mobile
+        parent_mobile = None
         try:
-            user = db.session.query(UserProfile).filter(
-                UserProfile.id == user_id).first()
             # 当前用户 baidu_user_id的后缀
             if is_sub_account:
                 last_face_image = FaceImg.query.filter(
@@ -498,8 +498,6 @@ class ClientAppService(object):
                     suffix = "01"
                 baidu_user_id = user.mobile + "_" + suffix
                 parent_mobile = user.mobile
-            else:
-                baidu_user_id = user.mobile
 
             # 检测是否已经注册
             is_register = db.session.query(FaceImg).filter(
@@ -513,7 +511,7 @@ class ClientAppService(object):
                 res = requests.get(oss_url)
                 image = base64.b64encode(res.content).decode("utf8")
                 data = face.rgn_client.addUser(
-                    image, "BASE64", conf.config['BAIDU_GROUP_ID'],
+                    image, "BASE64", user.mobile,
                     baidu_user_id)
             except:
                 import traceback
@@ -525,11 +523,11 @@ class ClientAppService(object):
 
             face_image = FaceImg()
             face_image.baidu_user_id = baidu_user_id
-            face_image.group_id = conf.config['BAIDU_GROUP_ID']
+            face_image.group_id = user.mobile
             face_image.oss_url = oss_url
-            if is_sub_account:
-                face_image.parent_mobile = parent_mobile
-                face_image.sub_account_name = sub_account_name
+            #if is_sub_account:
+            face_image.parent_mobile = parent_mobile
+            face_image.sub_account_name = sub_account_name
             face_image.is_sub_account = is_sub_account
             face_image.face_id = data["result"]["face_token"]
             face_image.face_last_time = datetime.now()
@@ -554,14 +552,11 @@ class ClientAppService(object):
         except:
             import traceback
             print traceback.format_exc()
-            flag = 1
             db.session.rollback()
             return -2
         finally:
             db.session.close()
-            if flag:
-                face.rgn_client.deleteUser(
-                    conf.config['BAIDU_GROUP_ID'], baidu_user_id)
+            face.rgn_client.deleteUser(user.mobile, baidu_user_id)
 
     @staticmethod
     def user_recharges(user_id, is_open_bill, last_pk, state):

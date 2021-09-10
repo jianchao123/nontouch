@@ -68,12 +68,11 @@ class ProductionConfig(Config):
     }
 
     # 百度人脸识别
-    BAIDU_APP_ID = '16019070'
-    BAIDU_API_KEY = '8NKZFsIy7on2pBUj7zB65Hlq'
-    BAIDU_SECRET_KEY = '1tVgfs6uUIb9vDOFwAMLhX7PBBW0fr8G'
-    BAIDU_GROUP_ID = "test"
+    BAIDU_APP_ID = '24831550'
+    BAIDU_API_KEY = 'GXxpMgNvAaQxzXfXVe0q7fvZ'
+    BAIDU_SECRET_KEY = 'Xg0eChKitGhYSEeEudVtKpD41iuSCkgB'
 
     # 临时目录
     TEMP_DIR = '/data/temp'
 
-    REDIS_DB = 3
+    REDIS_DB = 0

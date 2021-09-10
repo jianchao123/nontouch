@@ -304,19 +304,21 @@ class AdminUserService(object):
     @staticmethod
     def login_user_info(user_id):
         db.session.commit()
+        # 登录用户的个人信息和公司信息
         user = db.session.query(AdminUser).filter(
             AdminUser.id == user_id).first()
-
         company = db.session.query(Company).filter(
             Company.id == user.company_id).first()
+        from service.CompanyService import CompanyService
+        print CompanyService.get_company_permission_id_list(company.id)
 
-        permissions = json.loads(company.permissions)
-        permission_sets = db.session.query(Permissions).filter(
-            Permissions.id.in_([row['permission_id'] for row in permissions]))
-
+        permission_set = db.session.query(Permissions).filter(
+            Permissions.id.in_(CompanyService.get_company_permission_id_list(company.id))).all()
+        print "=========================="
+        print permission_set
         # 该用户所属的公司权限
         company_permissions = []
-        for row in permission_sets:
+        for row in permission_set:
             company_permissions.append(
                 {'id': row.id,
                  'permission_name': row.permission_name,
@@ -346,13 +348,6 @@ class AdminUserService(object):
         AdminUserService.addition_button(
             main_dict['childNode'], user_permission_ids)
         user_menus = main_dict["childNode"]
-
-        # 用户权限
-        # sets = db.session.query(Permissions).filter(
-        #     Permissions.id.in_(user_permission_ids)).all()
-        # user_permissions = []
-        # for row in sets:
-        #     user_permissions.append({'id': row.id})
 
         return {'company_id': company.id, 'company_logo': company.logo,
                 'company_name': company.name,
