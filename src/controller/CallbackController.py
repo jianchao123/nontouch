@@ -141,7 +141,7 @@ responses:
     latitude = data["latitude"]
     verify_type = int(data["verify_type"])
     mobile = data.get("mobile", None)
-
+    # TODO 修改
 
     # 验证签名
     if not isinstance(data, dict):
