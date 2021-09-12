@@ -1,12 +1,13 @@
 # coding: utf-8
 import json
 import time
-import urllib
+import zlib
+import base64
 import requests
 from datetime import datetime
 from msgqueue import config
 from msgqueue import tools
-from msgqueue.db import transaction, MysqlDbUtil
+from msgqueue.db import transaction, MysqlDbUtil,rds_conn
 
 from selenium import webdriver
 import os
@@ -33,6 +34,7 @@ class BusConsumer(object):
     def __init__(self):
         self.logger = tools.get_logger(config.log_path)
         self.get_station_business = GetStationBusiness(self.logger)
+        self.gen_feature = GenFeature(self.logger)
 
     def callback(self, ch, method, properties, body):
         try:
@@ -41,11 +43,14 @@ class BusConsumer(object):
             routing_suffix = arr[-1]
             if routing_suffix == 'get_station':
                 self.get_station_business.get_station(data)
+            if routing_suffix == 'gen_feature':
+                self.gen_feature.gen_feature(data)
         finally:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 class GetStationBusiness(object):
+    """根据线路添加站点"""
 
     def __init__(self, logger):
         self.logger = logger
@@ -223,3 +228,48 @@ class GetStationBusiness(object):
                         }
                         db.insert(sql_cur, d,
                                   table_name='route_station_relation')
+
+
+class GenFeature(object):
+    """生成特征值"""
+    GET_TOKEN_URL = 'https://aip.baidubce.com/rest/2.0/face/v1/feature'
+
+    def __init__(self, logger):
+        self.logger = logger
+
+    @transaction(is_commit=True)
+    def gen_feature(self, sql_cur, data):
+        db = MysqlDbUtil
+        baidu_access_token = rds_conn.get('BAIDU_ACCESS_TOKEN')
+        if baidu_access_token:
+            fid = data['fid']   # face_img pk
+            oss_url = data['oss_url']
+            res = requests.get(oss_url)
+            image = base64.b64encode(res.content).decode("utf8")
+            d = {
+                'image': image,
+                'image_type': 'BASE64',
+                'version': 6002,
+                'access_token': baidu_access_token
+            }
+            res = requests.post(GenFeature.GET_TOKEN_URL, d)
+            if res.status_code == 200:
+                d = json.loads(res.content)
+                if d['error_code'] == 0:
+                    result = d['result']
+                    if result['face_num'] > 0:
+                        feature = result['face_list'][0]['feature']
+                        feature_crc = zlib.crc32(feature) & 0xffffffff
+                        update_d = {
+                            '`id`': fid,
+                            '`feature`': feature,
+                            '`feature_crc`': feature_crc,
+                            '`status`': 3   # 有效
+                        }
+                        db.update(sql_cur, update_d)
+                    else:
+                        update_d = {
+                            '`id`': fid,
+                            '`status`': 4  # 失败
+                        }
+                        db.update(sql_cur, update_d)

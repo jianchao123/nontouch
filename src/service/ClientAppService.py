@@ -537,6 +537,10 @@ class ClientAppService(object):
             face_image.company_id = 1 # 无感行
             db.session.add(face_image)
             db.session.commit()
+
+            # 添加人脸
+            from msgqueue import producer
+            producer.gen_feature(face_image.id, face_image.oss_url)
             return {'id': face_image.id,
                     'baidu_user_id': face_image.baidu_user_id,
                     'group_id': face_image.group_id,

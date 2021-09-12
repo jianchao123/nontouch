@@ -147,27 +147,30 @@ class MiniService(object):
             print traceback.format_exc()
 
         print baidu_res, baidu_res['error_code']
-        if baidu_res and not baidu_res["error_code"]:
-            # 添加face_img记录
-            face_img = FaceImg.query.filter(
-                FaceImg.baidu_user_id == mobile).first()
-            if not face_img:
-                face_img = FaceImg()
-            face_img.face_last_time = datetime.now()
-            face_img.user = user
-            face_img.img = ""  # bytes
-            face_img.baidu_user_id = mobile
-            face_img.group_id = user.mobile
-            face_img.oss_url = url
-            face_img.is_sub_account = False
-            face_img.face_id = baidu_res["result"]["face_token"]
-            face_img.face_last_time = datetime.now()
-            face_img.status = 1     # 有效
-            db.session.add(face_img)
+        if not baidu_res or baidu_res["error_code"]:
+            return -11
+        # 添加face_img记录
+        face_img = FaceImg.query.filter(
+            FaceImg.baidu_user_id == mobile).first()
+        if not face_img:
+            face_img = FaceImg()
+        face_img.face_last_time = datetime.now()
+        face_img.user = user
+        face_img.img = ""  # bytes
+        face_img.baidu_user_id = mobile
+        face_img.group_id = user.mobile
+        face_img.oss_url = url
+        face_img.is_sub_account = False
+        face_img.face_id = baidu_res["result"]["face_token"]
+        face_img.face_last_time = datetime.now()
+        face_img.status = 1     # 有效
+        db.session.add(face_img)
         # 打开人脸功能
         user.is_open_face_rgz = True
         try:
             db.session.commit()
+            from msgqueue import producer
+            producer.gen_feature(face_img.id, face_img.oss_url)
             return {'id': 0}
         except SQLAlchemyError:
             db.session.rollback()

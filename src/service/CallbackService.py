@@ -321,7 +321,6 @@ class CallbackService(object):
         ret_data = {"mobile": user_mobile,
                     "amounts": str(user_amounts)}
 
-
         return ret_data
 
     @staticmethod

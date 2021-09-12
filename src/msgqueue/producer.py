@@ -38,6 +38,15 @@ def heartbeat():
                  json.dumps({'heartbeat': 1}))
 
 
+def gen_feature(fid, oss_url):
+    """生成feature"""
+    data = {
+        'fid': fid,
+        'oss_url': oss_url
+    }
+    _publish_msg('bus_exchange', 'bus.gen_feature', json.dumps(data))
+
+
 # 测试用户创建
 if __name__ == "__main__":
     # generate_create_user_msg(12)

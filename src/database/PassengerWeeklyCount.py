@@ -9,7 +9,8 @@ class PassengerWeeklyCount(db.Model):
 	__tablename__ = 'passenger_weekly_count'
 
 	id = db.Column(db.BigInteger, primary_key=True)
+	fid = db.Column(db.Integer)			# fid
 	mobile = db.Column(db.String(32))	# 手机号
-	count = db.Column(db.Integer)		# 线路
-	route_id = db.Column(db.Integer)	# 次数
+	count = db.Column(db.Integer)		# 次数
+	route_id = db.Column(db.Integer)	# 线路
 	company_id = db.Column(db.Integer)

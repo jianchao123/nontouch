@@ -137,10 +137,11 @@ responses:
     print data
     device_no = data["device_no"]
     up_stamp = data["up_stamp"]
-    mobile = data["mobile"]
     longitude = data["longitude"]
     latitude = data["latitude"]
     verify_type = int(data["verify_type"])
+    mobile = data.get("mobile", None)
+
 
     # 验证签名
     if not isinstance(data, dict):

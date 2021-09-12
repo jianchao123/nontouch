@@ -221,38 +221,44 @@ class UserData(object):
         """
         order_sql = "SELECT COUNT(`sub_account`),`route_id`,`sub_account` " \
                     "FROM `order` WHERE `pay_time` > '{}' " \
+                    "AND verify_type in (1,2)" \
                     "GROUP BY `sub_account`,`route_id`"
         pwc_sql = "SELECT `id` FROM `passenger_weekly_count` " \
                   "WHERE `mobile`='{}' AND `route_id`={}"
+        face_sql = "SELECT `id` FROM `face_img` WHERE `baidu_user_id`='{}' LIMIT 1"
 
         cur_time = datetime.now()
         mysql_db = db.MysqlDbUtil
-        cur_time = cur_time - timedelta(days=7 + cur_time.weekday())
+        last_seven_day = cur_time - timedelta(days=7 + cur_time.weekday())
         # 增加记录
         result = mysql_db.query(mysql_cur, order_sql.format(
-            cur_time.strftime("%Y-%m-%d 00:00:00")))
+            last_seven_day.strftime("%Y-%m-%d 00:00:00")))
         for row in result:
             count = row[0]
             route_id = row[1]
             sub_account = row[2]
-            print pwc_sql.format(sub_account, route_id)
-            pwc = mysql_db.get(mysql_cur, pwc_sql.format(sub_account, route_id))
-            if pwc:
-                data = {
-                    "`id`": pwc[0],
-                    "`mobile`": sub_account,
-                    "`route_id`": route_id,
-                    "`count`": count
-                }
-                mysql_db.update(mysql_cur, data, table_name="`passenger_weekly_count`")
-            else:
-                data = {
-                    "`mobile`": sub_account,
-                    "`route_id`": route_id,
-                    "`count`": count,
-                    "`company_id`": 1  # 无感行
-                }
-                mysql_db.insert(mysql_cur, data, table_name="`passenger_weekly_count`")
+            face_obj = mysql_db.get(mysql_cur, face_sql.format(sub_account))
+            if face_obj:
+                fid = face_obj[0]
+                pwc = mysql_db.get(mysql_cur, pwc_sql.format(sub_account, route_id))
+                if pwc:
+                    data = {
+                        "`id`": pwc[0],
+                        "`fid`": fid,
+                        "`mobile`": sub_account,
+                        "`route_id`": route_id,
+                        "`count`": count
+                    }
+                    mysql_db.update(mysql_cur, data, table_name="`passenger_weekly_count`")
+                else:
+                    data = {
+                        "`fid`": fid,
+                        "`mobile`": sub_account,
+                        "`route_id`": route_id,
+                        "`count`": count,
+                        "`company_id`": 1  # 无感行
+                    }
+                    mysql_db.insert(mysql_cur, data, table_name="`passenger_weekly_count`")
 
 
 class IdentitiesData(object):
