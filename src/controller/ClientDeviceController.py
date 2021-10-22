@@ -170,8 +170,8 @@ responses:
                   type: string
     """
     device_no = args['device_no']
-    mobiles = args['mobiles']
-    ret = ClientDeviceService.device_update_strategy(mobiles, device_no)
+    data = args['data']
+    ret = ClientDeviceService.device_update_strategy(device_no, data)
     if ret == -1:
         raise AppError(*GlobalErrorCode.OBJ_NOT_FOUND_ERROR)
     if ret == -10:

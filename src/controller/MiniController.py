@@ -179,7 +179,7 @@ responses:
     """
     url = args['url']
     mobile = args['mobile']
-    ret = MiniService.upload_baidu(url, mobile)
+    ret = MiniService.signup_face(url, mobile)
     if ret == -2:
         raise AppError(*GlobalErrorCode.DB_COMMIT_ERR)
     if ret == -10:

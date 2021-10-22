@@ -139,9 +139,14 @@ responses:
     up_stamp = data["up_stamp"]
     longitude = data["longitude"]
     latitude = data["latitude"]
-    verify_type = int(data["verify_type"])
     mobile = data.get("mobile", None)
-    # TODO 修改
+    fid = data.get('fid', None)
+
+    if mobile and fid:
+        return AppError(*GlobalErrorCode.PARAM_ERROR)
+
+    if not mobile and not fid:
+        return AppError(*GlobalErrorCode.PARAM_ERROR)
 
     # 验证签名
     if not isinstance(data, dict):
@@ -154,14 +159,6 @@ responses:
             google_gps_to_gorde_gpd(longitude, latitude)
     except:
         raise AppError(*SubErrorCode.DEVICE_GPS_CONVERSION_ERROR)
-    sub_account = None
-    if len(mobile) > 11:
-        sub_account = mobile
-        mobile = mobile[:11]
-
-    # 不是人脸请求直接报错
-    if verify_type and verify_type != 2:
-        raise AppError(*GlobalErrorCode.PARAM_ERROR)
 
     try:
         scan_time = datetime.fromtimestamp(float(up_stamp))
@@ -169,7 +166,7 @@ responses:
         raise AppError(*GlobalErrorCode.PARAM_ERROR)
 
     ret = CallbackService.face_callback(
-        device_no, scan_time, mobile, verify_type, sub_account)
+        device_no, scan_time, mobile, fid)
     if ret == -10:
         raise AppError(*SubErrorCode.DEVICE_NOT_FOUND_ERROR)
     if ret == -11:
@@ -256,18 +253,13 @@ responses:
     device_no = data["device_no"]
     up_stamp = data["up_stamp"]
     mobile = data["mobile"]
-    verify_type = int(data["verify_type"])
-    # 不是无感行二维码请求直接报错
-    if verify_type != 1:
-        raise AppError(*GlobalErrorCode.PARAM_ERROR)
-
     try:
         up_time = datetime.fromtimestamp(float(up_stamp))
     except ValueError:
         raise AppError(*GlobalErrorCode.PARAM_ERROR)
     print(str(data))
     ret = CallbackService.qrcode_callback(mobile, device_no, up_time,
-                                          verify_type, longitude, latitude)
+                                          1, longitude, latitude)
     if ret == -10:
         raise AppError(*SubErrorCode.DEVICE_NOT_FOUND_ERROR)
     if ret == -11:

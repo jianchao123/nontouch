@@ -114,9 +114,9 @@ class MiniService(object):
             db.session.close()
 
     @staticmethod
-    def upload_baidu(url, mobile):
+    def signup_face(url, mobile):
         """
-        上传到百度
+        注册人脸(小程序目前没有添加子账户的功能)
         """
         db.session.commit()
         rgn_client = AipFace(conf.config['BAIDU_APP_ID'],

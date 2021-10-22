@@ -88,22 +88,22 @@ class ClientDeviceService(object):
                 update_list.append(fid)
 
         results = db.session.query(FaceImg).filter(
-            FaceImg.id.in_(add_list)).first()
+            FaceImg.id.in_(add_list)).all()
         add = []
         for row in results:
-            add.append(row.feature)
+            add.append({"fid": row.id, "feature": row.feature})
 
         results = db.session.query(FaceImg).filter(
-            FaceImg.id.in_(delete_list)).first()
+            FaceImg.id.in_(delete_list)).all()
         delete = []
         for row in results:
-            delete.append(row.feature)
+            delete.append({"fid": row.id})
 
         results = db.session.query(FaceImg).filter(
-            FaceImg.id.in_(update_list)).first()
+            FaceImg.id.in_(update_list)).all()
         update = []
         for row in results:
-            update.append(row.feature)
+            update.append({"fid": row.id, "feature": row.feature})
 
         data = {
             "add": add,

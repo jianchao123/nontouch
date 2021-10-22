@@ -72,13 +72,11 @@ class CompanyService(object):
         # 检查上传的权限,添加公司的权限不能超过自己公司的权限
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
-        permissions_tmp = json.loads(permissions)
+        permission_id_list = [int(row) for row in permissions.split(",")]
         # 子公司权限需要继承父公司
         if CompanyService.check_commit_permission(
-                login_user_company.id,
-                [int(row['permission_id']) for row in json.loads(permissions)]):
+                login_user_company.id, permission_id_list):
             return -10
-        permission_ids = [row["permission_id"] for row in permissions_tmp]
 
         # 创建初始化帐号
         new_user = AdminUser()
@@ -137,7 +135,7 @@ class CompanyService(object):
 
         # 添加公司权限
         bulk_obj = []
-        for permission_id in permission_ids:
+        for permission_id in permission_id_list:
             company_permission = CompanyPermission()
             company_permission.company_id = company.id
             company_permission.permission_id = permission_id
@@ -146,7 +144,7 @@ class CompanyService(object):
 
         # 为该公司初始化帐号添加权限
         bulk_obj = []
-        for permission_id in permission_ids:
+        for permission_id in permission_id_list:
             user_permission = UserPermissions()
             user_permission.user_id = new_user_id
             user_permission.permission_id = permission_id
@@ -168,27 +166,9 @@ class CompanyService(object):
             db.session.close()
         return new_company_id
 
-    # @staticmethod
-    # def _get_permission_str(company_permission_id_list, new_permissions):
-    #     d = []
-    #     new_permission_ids = [row["permission_id"] for row in new_permissions]
-    #
-    #     delete_permission_ids = list(
-    #         set(company_permission_id_list) - set(new_permission_ids))
-    #     # 删除权限
-    #     func = lambda obj: False if obj["permission_id"] in delete_permission_ids else True
-    #     d += list(filter(func, cur_permissions))
-    #
-    #     # 增加权限
-    #     add_permission_ids = list(
-    #         set(new_permission_ids) - set(old_permission_ids))
-    #     func = lambda obj: True if obj["permission_id"
-    #                                    ] in add_permission_ids else False
-    #     d += list(filter(func, new_permissions))
-    #     return json.dumps(d), delete_permission_ids, add_permission_ids
-
     @staticmethod
     def get_company_permission_id_list(company_id):
+        """根据公司ID获取公司权限"""
         company_permissions = db.session.query(CompanyPermission).filter(
             CompanyPermission.company_id == company_id).all()
         company_permission_id_list = []
@@ -202,13 +182,12 @@ class CompanyService(object):
                        house_number, mobile, name, new_permissions,
                        username, password, line_nos):
         db.session.commit()
-        new_permissions = json.loads(new_permissions)
+        new_permissions = [int(row) for row in new_permissions.split(",")]
 
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
         if CompanyService.check_commit_permission(
-                login_user_company.id,
-                [int(row['permission_id']) for row in json.loads(new_permissions)]):
+                login_user_company.id, new_permissions):
             return -10
 
         company = db.session.query(Company).filter(Company.id == pk).first()
@@ -246,7 +225,7 @@ class CompanyService(object):
             CompanyService.get_company_permission_id_list(company.id)
 
         # 需要删除的权限id
-        new_permission_id_list = [row["permission_id"] for row in new_permissions]
+        new_permission_id_list = new_permissions
         delete_permission_ids = list(set(company_permission_id_list)
                                      - set(new_permission_id_list))
         # 减少该公司下面所有人的权限

@@ -55,19 +55,21 @@ class AdminUserService(object):
         return {'count': count, 'results': results}
 
     @staticmethod
-    def check_commit_permission(user_company_permissions, commit_permissions):
+    def check_commit_permission(company_id, commit_permissions):
         """
         检查提交的权限集合
         """
         db.session.commit()
+        from CompanyService import CompanyService
         user_company_permission_ids = \
-            [int(row['permission_id'])
-             for row in json.loads(user_company_permissions)]
+            CompanyService.get_company_permission_id_list(company_id)
         user_company_permission_ids.sort()
         commit_permission_ids = \
             [int(row['permission_id'])
              for row in json.loads(commit_permissions)]
         commit_permission_ids.sort()
+        print "check_commit_permission"
+        print set(commit_permission_ids) - set(user_company_permission_ids)
         return set(commit_permission_ids) - set(user_company_permission_ids)
 
     @staticmethod
@@ -81,7 +83,7 @@ class AdminUserService(object):
         login_user_company = db.session.query(Company).filter(
             Company.id == company_id).first()
         if AdminUserService.check_commit_permission(
-                login_user_company.permissions, permissions):
+                login_user_company.id, permissions):
             return -10
 
         permissions = json.loads(permissions)
@@ -157,7 +159,7 @@ class AdminUserService(object):
             Company.id == company_id).first()
         # 检查提交的权限是否大于公司
         if AdminUserService.check_commit_permission(
-                login_user_company.permissions, permissions):
+                login_user_company.id, permissions):
             return -10
         permissions = json.loads(permissions)
         try:

@@ -237,8 +237,21 @@ class CallbackService(object):
             db.session.close()
 
     @staticmethod
-    def face_callback(device_no, scan_time, mobile, verify_type, sub_account):
+    def face_callback(device_no, scan_time, mobile, fid):
         db.session.commit()
+        is_sub_account = False
+        # 判断是否子账户
+        if mobile:
+            if len(mobile) > 11:
+                is_sub_account = True
+        else:
+            face = db.session.query(FaceImg).filter(
+                FaceImg.id == int(fid)).first()
+            if len(face.baidu_user_id) > 11:
+                is_sub_account = True
+                mobile = face.baidu_user_id
+
+        # 从缓存获取设备相关信息
         device_dict = cache.hgetall(device_no)
         if device_dict:
             print device_dict
@@ -247,7 +260,6 @@ class CallbackService(object):
             company_id = int(device_dict[b"company_id"].decode('utf-8'))
             route_id = int(device_dict[b"route_id"].decode('utf-8'))
         else:
-
             device = db.session.query(Device).filter(
                 Device.device_no == device_no).with_for_update().first()
             if not device:
@@ -279,7 +291,6 @@ class CallbackService(object):
                         "up_stamp": scan_time,
                         "scan_time": scan_time,
                         "company_id": company_id}
-        # order_params["station"] = BusStation.objects.get(id=d)
 
         # 设备号+用户号码,控制重复刷脸
         k = "{}:{}".format(device_no, mobile)
@@ -287,32 +298,23 @@ class CallbackService(object):
         print str(rds_v)
         if rds_v:
             return -11
-
-        # 写入rds
         cache.set(k, 1)
         cache.expire(k, 1 * 60)
 
-        if sub_account:
-            face_img_obj = db.session.query(FaceImg).filter(
-                FaceImg.baidu_user_id == sub_account).first()
-            if not face_img_obj:
-                return -12
-            userprofile = UserProfile.query.filter(
-                UserProfile.id == face_img_obj.user_id).first()
-            user_mobile = userprofile.mobile
-            user_amounts = userprofile.balance
-        else:
-            # 获取用户
-            userprofile = UserProfile.query.filter(
-                UserProfile.mobile == mobile).first()
-            user_mobile = userprofile.mobile
-            user_amounts = userprofile.balance
+        face_img_obj = db.session.query(FaceImg).filter(
+            FaceImg.baidu_user_id == mobile).first()
+        userprofile = UserProfile.query.filter(
+            UserProfile.id == face_img_obj.user_id).first()
         if not userprofile.is_open_face_rgz:
-            return -13
+            return -13          # 未开启刷脸功能
+
+        user_mobile = userprofile.mobile
+        user_amounts = userprofile.balance
 
         # 创建订单,扣款
         order_ret = CallbackService.create_order(
-            userprofile, order_params, verify_type, sub_account)
+            userprofile, order_params, 2,
+            mobile if is_sub_account else None)
         if order_ret == -1:     # 余额不足
             return -14
         elif order_ret == -2:   # 提交失败
