@@ -11,7 +11,7 @@ from database.BusCar import BusCar
 from database.BusRoute import BusRoute
 from database.PassengerWeeklyCount import PassengerWeeklyCount
 from database.FaceImg import FaceImg
-from ext import cache
+from ext import cache, conf
 
 
 class ClientDeviceService(object):
@@ -21,6 +21,7 @@ class ClientDeviceService(object):
         access_token = cache.get('BAIDU_ACCESS_TOKEN')
         d = {
             'access_token': access_token,
+            'group_id': conf.config['BAIDU_GROUP_ID'],
         }
         return d
 

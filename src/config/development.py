@@ -73,6 +73,7 @@ class DevelopmentConfig(Config):
     BAIDU_APP_ID = '24831558'
     BAIDU_API_KEY = 'Si8bUb5dIqK4ZwtiKL5tFkKP'
     BAIDU_SECRET_KEY = 'XNRNi6MpIZjBqfSN0adcOHIPOk2GQVEk'
+    BAIDU_GROUP_ID = 'bus-dev'
 
     # 临时目录
 
