@@ -1025,7 +1025,7 @@ responses:
     to_whom = args.get('to_whom', None)
     remote_addr = request.remote_addr
     token = request.headers.get('token')
-    amount = 0.01
+    amount = amount
     is_mini = 0
     if 'MINI' in token:
         is_mini = 1

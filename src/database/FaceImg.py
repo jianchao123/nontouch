@@ -22,5 +22,5 @@ class FaceImg(db.Model):
 	user_id = db.Column(db.Integer)		# 乘客
 	company_id = db.Column(db.Integer)
 	feature = db.Column(db.String(1024))
-	feature_crc = db.Column(db.String(1024))
+	feature_crc = db.Column(db.String(32))
 
