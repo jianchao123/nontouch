@@ -59,7 +59,7 @@ class ProductionConfig(Config):
 
     # 手机验证码
     ALIYUN_VERIFY_CODE = {
-        'accessKeyId': 'LTAIHTcfamNy7bzi',
+        'accessKeyId': '',  # LTAIHTcfamNy7bzi
         'accessSecret': 'wVcKfAmvCL1hbSazwW8olsAFpQWEHF',
         'SignName': '无感行',
         'register_template_code': 'SMS_160856297',
