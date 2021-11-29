@@ -772,10 +772,16 @@ class ClientAppService(object):
         return {'results': result}
 
     @staticmethod
-    def app_version():
+    def app_version(name):
         db.session.commit()
-        application = db.session.query(Application).order_by(
-            Application.version_code.desc()).first()
+        query = db.session.query(Application)
+        if name:
+            query = query.filter(Application.name == name)
+        else:
+            # app
+            query = query.filter(Application.name == 'wgx_app')
+        application = query.order_by(Application.version_code.desc()).first()
+
         return {
             'id': application.id,
             'name': application.name,
