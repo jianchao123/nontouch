@@ -1252,7 +1252,8 @@ responses:
 def get_app_version(args):
     """
     """
-    return ClientAppService.app_version()
+    name = args.get('name', None)
+    return ClientAppService.app_version(name)
 
 
 @bp.route('/feedbacks/', methods=['POST'])
