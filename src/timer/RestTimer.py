@@ -470,3 +470,5 @@ class EveryFewMinutesExe(object):
             if "error" not in d:
                 rds_conn.set('BAIDU_ACCESS_TOKEN', d['access_token'])
                 rds_conn.expire('BAIDU_ACCESS_TOKEN', int(d['expires_in']))
+            else:
+                db.logger.error(str(d))
