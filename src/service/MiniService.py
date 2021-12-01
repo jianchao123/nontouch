@@ -155,7 +155,7 @@ class MiniService(object):
         if not face_img:
             face_img = FaceImg()
         face_img.face_last_time = datetime.now()
-        face_img.user = user
+        face_img.user_id = user.id
         face_img.img = ""  # bytes
         face_img.baidu_user_id = mobile
         face_img.group_id = user.mobile
