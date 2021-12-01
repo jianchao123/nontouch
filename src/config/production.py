@@ -71,7 +71,7 @@ class ProductionConfig(Config):
     BAIDU_APP_ID = '24831550'
     BAIDU_API_KEY = 'GXxpMgNvAaQxzXfXVe0q7fvZ'
     BAIDU_SECRET_KEY = 'Xg0eChKitGhYSEeEudVtKpD41iuSCkgB'
-    BAIDU_GROUP_ID = 'bus-pro'
+    BAIDU_GROUP_ID = 'china'
 
     # 临时目录
     TEMP_DIR = '/data/temp'

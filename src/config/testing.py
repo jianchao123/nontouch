@@ -72,7 +72,7 @@ class TestingConfig(Config):
     BAIDU_APP_ID = '24831552'
     BAIDU_API_KEY = 'ZKkHrawGz9v8lSB9GB8SBHxR'
     BAIDU_SECRET_KEY = 'yfHHmzhRzapTVd9uczLxTLCH33IOAb5x'
-    BAIDU_GROUP_ID = 'bus-test'
+    BAIDU_GROUP_ID = 'china'
 
     # 临时目录
     TEMP_DIR = '/data/temp'
