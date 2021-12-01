@@ -417,7 +417,7 @@ class ClientAppService(object):
                 image = base64.b64encode(res.content).decode("utf8")
                 # 更新人脸
                 d = face.rgn_client.updateUser(
-                    image, "BASE64", instance.group_id, baidu_user_id)
+                    image, "BASE64", 'china', baidu_user_id)
                 # 用户不存在
                 if d["error_code"] == 223103:
                     return -10
@@ -460,7 +460,7 @@ class ClientAppService(object):
         try:
             face_image.status = 10
             face.rgn_client.deleteUser(
-                face_image.group_id,
+                'china',
                 face_image.baidu_user_id)
             db.session.commit()
             return {'id': face_image.id}
@@ -511,7 +511,7 @@ class ClientAppService(object):
                 res = requests.get(oss_url)
                 image = base64.b64encode(res.content).decode("utf8")
                 data = face.rgn_client.addUser(
-                    image, "BASE64", user.mobile,
+                    image, "BASE64", 'china',
                     baidu_user_id)
             except:
                 import traceback
@@ -560,7 +560,7 @@ class ClientAppService(object):
             return -2
         finally:
             db.session.close()
-            face.rgn_client.deleteUser(user.mobile, baidu_user_id)
+            face.rgn_client.deleteUser('china', baidu_user_id)
 
     @staticmethod
     def user_recharges(user_id, is_open_bill, last_pk, state):

@@ -134,12 +134,12 @@ class MiniService(object):
             res = requests.get(private_url)
             image = base64.b64encode(res.content).decode("utf8")
             baidu_res = rgn_client.addUser(
-                image, "BASE64", user.mobile, mobile)
+                image, "BASE64", 'china', mobile)
             # 已存在百度人脸库,更新
             print(baidu_res)
             if baidu_res["error_code"] == 223105:
                 baidu_res = rgn_client.updateUser(
-                    image, "BASE64", user.mobile, mobile)
+                    image, "BASE64", 'china', mobile)
             elif baidu_res["error_code"] == 222203:
                 return -10
         except:
