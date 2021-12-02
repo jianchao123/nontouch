@@ -404,3 +404,34 @@ class CallbackService(object):
             RedisKey.DEVICE_GPS_HASH, device_no, str(lng) + "," + str(lat))
         rds_conn.hset(
             RedisKey.DEVICE_TIMESTAMP_HASH, device_no, str(int(timestamp)))
+
+    @staticmethod
+    def temperature_callback(mobile, temperature, scan_timestamp, device_no, gps):
+        """
+        mobile  可能为空
+        """
+        db.session.commit()
+        from database.Temperature import Temperature
+        device = db.session.query(Device).filter(
+            Device.device_no == device_no).first()
+        car = db.session.query(BusCar).filter(
+            BusCar.id == device.car_id).first()
+        if not car:
+            return -10  # 没有绑定车辆
+        t = Temperature()
+        t.company_id = device.company_id
+        t.mobile = mobile
+        t.temperature = float(temperature)
+        t.car_no = car.bus_id
+        t.device_id = device.id
+        t.gps = gps
+        t.up_timestamp = round(Decimal(str(scan_timestamp)), 6)
+        try:
+            db.session.add(t)
+            db.session.commit()
+            return t.id
+        except SQLAlchemyError:
+            db.session.rollback()
+            return -2
+        finally:
+            db.session.close()

@@ -7,6 +7,11 @@ class Temperature(db.Model):
     """温度"""
     __tablename__ = 'temperature'
     id = db.Column(db.BigInteger, primary_key=True)
-    temperature = db.Column(db.Integer)
     mobile = db.Column(db.String(16))
-    create_time = db.Column(db.DateTime, default=datetime.now)
+    temperature = db.Column(db.Float)
+    up_timestamp = db.Column(db.Float(9, 6))
+    device_id = db.Column(db.Integer)
+    car_no = db.Column(db.String(32))
+    gps = db.Column(db.String(32))
+    company_id = db.Column(db.Integer)
+

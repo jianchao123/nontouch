@@ -282,3 +282,22 @@ def gps_callback(args):
     timestamp = data['timestamp']
     CallbackService.gps_callback(device_no, longitude, latitude, timestamp)
     return {}
+
+
+@bp.route('/temperature/', methods=['POST'])
+@post_require_check([])
+def temperature_callback(args):
+    """
+    温度上送
+    """
+    from utils.defines import SubErrorCode
+    mobile = args.get("mobile", None)
+    temperature = args["temperature"]
+    scan_timestamp = args["scan_timestamp"]
+    device_no = args['device_no']
+    gps = args['gps']
+    ret = CallbackService.temperature_callback(
+        mobile, temperature, scan_timestamp, device_no, gps)
+    if ret == -10:
+        raise AppError(*SubErrorCode.CAR_NOT_BINDING_ROUTE)
+    return {"id": ret}
