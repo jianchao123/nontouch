@@ -285,7 +285,7 @@ def gps_callback(args):
 
 
 @bp.route('/temperature/', methods=['POST'])
-@post_require_check([])
+@post_require_check(["temperature", "scan_timestamp", "device_no", "gps"])
 def temperature_callback(args):
     """
     温度上送
