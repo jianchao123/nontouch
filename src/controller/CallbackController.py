@@ -285,10 +285,52 @@ def gps_callback(args):
 
 
 @bp.route('/temperature/', methods=['POST'])
-@post_require_check([])
+@post_require_check(["temperature", "scan_timestamp", "device_no", "gps"])
 def temperature_callback(args):
     """
-    温度上送
+温度上送
+温度上送，需要先登录
+---
+tags:
+  - 设备
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      properties:
+        mobile:
+          type: string
+          description: 手机号
+        temperature:
+          type: number
+          description: 温度
+        scan_timestamp:
+          type: integer
+          description: 时间戳
+        device_no:
+          type: string
+          description: 设备号
+        gps:
+          type: string
+          description: gps
+responses:
+  200:
+    description: 正常返回http code 200
+    schema:
+      properties:
+        detail:
+          type: string
+          description: 错误消息
+        code:
+          type: integer
+          description: 状态 0正常 1参数错误 200094验签失败 200049余额不足 200098根据上送的设备号找不到设备
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              description: 手机号
     """
     from utils.defines import SubErrorCode
     mobile = args.get("mobile", None)

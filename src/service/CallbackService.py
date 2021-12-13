@@ -425,12 +425,13 @@ class CallbackService(object):
         t.car_no = car.bus_id
         t.device_id = device.id
         t.gps = gps
-        t.up_timestamp = round(Decimal(str(scan_timestamp)), 6)
+        t.up_timestamp = str(scan_timestamp)
         try:
             db.session.add(t)
             db.session.commit()
-            return t.id
-        except SQLAlchemyError:
+            return int(t.id)
+        except SQLAlchemyError as ex:
+            print ex
             db.session.rollback()
             return -2
         finally:
