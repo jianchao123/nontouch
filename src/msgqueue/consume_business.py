@@ -5,6 +5,12 @@ import zlib
 import base64
 import requests
 from datetime import datetime
+
+from aliyunsdkcore.client import AcsClient
+from aliyunsdkiot.request.v20180120.RegisterDeviceRequest import \
+    RegisterDeviceRequest
+from aliyunsdkiot.request.v20180120.PubRequest import PubRequest
+
 from msgqueue import config
 from msgqueue import tools
 from msgqueue.db import transaction, MysqlDbUtil,rds_conn
@@ -266,10 +272,305 @@ class GenFeature(object):
                             '`feature_crc`': feature_crc,
                             '`status`': 3   # 有效
                         }
-                        db.update(sql_cur, update_d)
+                        db.update(sql_cur, update_d, table_name='`face_img`')
                     else:
                         update_d = {
                             '`id`': fid,
                             '`status`': 4  # 失败
                         }
-                        db.update(sql_cur, update_d)
+                        db.update(sql_cur, update_d, table_name='`face_img`')
+
+
+class DeviceConsumer(object):
+    def __init__(self):
+        self.logger = tools.get_logger(config.log_path)
+        self.device_business = DeviceBusiness(
+            config.Productkey, config.MNSAccessKeyId,
+            config.MNSAccessKeySecret, self.logger)
+
+    def device_callback(self, ch, method, properties, body):
+        data = json.loads(body.decode('utf-8'))
+        arr = method.routing_key.split(".")
+        routing_suffix = arr[-1]
+        if routing_suffix == 'list':
+            self.device_business.device_people_list_upgrade(data)
+        if routing_suffix == 'listsave':
+            self.device_business.device_people_list_save(data)
+        if routing_suffix == 'getdevicepeopledata':
+            self.device_business.send_get_people_data_msg(data)
+        if routing_suffix == 'updatechepai':
+            self.device_business.update_chepai(data)
+        if routing_suffix == 'devwhitelist':
+            self.device_business.dev_white_list_msg(data)
+        if routing_suffix == 'clearcnt':
+            self.device_business.clear_count(data)
+        if routing_suffix == 'delallface':
+            self.device_business.delete_all_face(data)
+        if routing_suffix == 'ossinfo':
+            self.device_business.set_oss_info(data)
+        # 消息确认
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+
+class DeviceBusiness(object):
+    """设备业务"""
+
+    tts = "https://cdbus-dev.oss-cn-shanghai." \
+          "aliyuncs.com/people/video/qsc.aac"
+
+    def __init__(self, product_key, mns_access_key_id,
+                 mns_access_key_secret, logger):
+        self.client = AcsClient(mns_access_key_id,
+                                mns_access_key_secret, 'cn-shanghai')
+        self.product_key = product_key
+        self.logger = logger
+        self.path = os.path.dirname(__file__) + '/temp'
+
+    def _batch_add_people(self, device_name, url):
+        """批量添加人员"""
+        jdata = {
+            "url": url,
+            "cmd": "batchaddface"
+        }
+        self._pub_msg(device_name, jdata)
+
+    def _publish_del_people_msg(self, device_name, fid):
+        """从设备上删除人员"""
+        jdata = {
+            "cmd": "delface",
+            "fid": int(fid)
+        }
+        self._pub_msg(device_name, jdata)
+
+    def _publish_update_people_msg(self, device_name, fid, nickname,
+                                   feature, aac_url):
+        """从设备上更新人员"""
+        jdata = {
+            "cmd": "updateface",
+            "fid": int(fid),
+            "fno": device_name,
+            "name": nickname,
+            "feature": feature,
+            "ttsurl": aac_url,
+            "group": 0,
+            "faceurl": "",
+            "cardno": ""
+        }
+        self._pub_msg(device_name, jdata)
+
+    def _publish_add_people_msg(self, device_name, fid, feature, nickname, aac_url):
+        """添加人员"""
+
+        jdata = {
+            "cmd": "addface",
+            "fid": int(fid),
+            "fno": device_name,
+            "name": nickname,
+            "feature": feature,
+            "ttsurl": aac_url,
+            "group": 0,
+            "faceurl": "",
+            "go_station": "",
+            "return_station": "",
+            "school": "",
+            "cardno": ""
+        }
+
+        self._pub_msg(device_name, jdata)
+
+    def _publish_dev_white_list(self, device_name):
+        jdata = {
+            "cmd": "devwhitelist",
+            "pkt_inx": -1
+        }
+        self._pub_msg(device_name, jdata)
+
+    def _pub_msg(self, devname, jdata):
+        print u"-----------加入顺序发送消息的队列--------"
+        k = rds_conn.get("stream_no_incr")
+        if k:
+            stream_no = rds_conn.incr("stream_no_incr")
+        else:
+            rds_conn.set("stream_no_incr", 1000000)
+            stream_no = 1000000
+        jdata["stream_no"] = stream_no
+        k = "mns_list_" + devname
+        rds_conn.rpush(k, json.dumps(jdata, encoding="utf-8"))
+
+    def _set_workmode(self, device_name, workmode, chepai, cur_volume, person_limit):
+        """
+        设置设备工作模式 0车载 1通道闸口 3注册模式
+        :param device_name:
+        :param workmode:
+        :return:
+        """
+        if workmode not in [0, 1, 3]:
+            return -1
+        if not cur_volume:
+            cur_volume = 100
+        cur_volume = cur_volume - 94
+        if not chepai:
+            return
+        jdata = {
+            "cmd": "syntime",
+            "time": int(time.time()),
+            "chepai": chepai.encode('utf-8'),
+            "workmode": workmode,
+            "delayoff": 7,
+            "leftdetect": 2,
+            "jiange": 10,
+            "cleartime": 70,
+            "shxmode": 0,
+            "volume": int(cur_volume),
+            "facesize": 390,
+            "uploadtype": 1,
+            "natstatus": 0,
+            "timezone": 8,
+            "temperature": 0,
+            "noreg": 0,
+            "light_type": 0,
+            'person_limit': person_limit
+        }
+
+        return self._pub_msg(device_name, jdata)
+
+    def dev_white_list_msg(self, data):
+        dev_name = data['dev_name']
+
+        try:
+            rds_conn.delete("{}_pkt_inx".format(dev_name))
+            rds_conn.delete("person_raw_{}".format(dev_name))
+        except:
+            pass
+        self._publish_dev_white_list(dev_name)
+
+    def update_chepai(self, data):
+        chepai = data['chepai']
+        device_name = data['device_name']
+        cur_volume = data['cur_volume']
+        workmode = data['workmode']
+        person_limit = data['person_limit']
+        self._set_workmode(device_name, int(workmode), chepai, cur_volume, person_limit)
+
+    # @transaction(is_commit=True)
+    # def device_people_list_save(self, pgsql_cur, data):
+    #     """保存设备上的信息到数据库"""
+    #     import struct
+    #     print "=================device_people_list_save====================="
+    #     pgsql_db = MysqlDbUtil
+    #     people_list_str = data['people_list_str']
+    #     device_name = data['device_name']
+    #     server_face_ids = data['server_face_ids']
+    #
+    #     people_raw_list = []
+    #     fid_list = []
+    #     people_list = people_list_str.split(",")
+    #     for row in people_list:
+    #         people_raw_list.append(row)
+    #         data = base64.b64decode(row)
+    #         length = len(data)
+    #         offset = 0
+    #         while offset < length:
+    #             s = data[offset: offset + 16]
+    #             ret_all = struct.unpack('<IiiI', s)
+    #             fid = ret_all[0]
+    #             fid_list.append(str(fid))
+    #             offset += 16
+    #     device_sql = "SELECT id FROM device WHERE device_name='{}' LIMIT 1"
+    #     device = pgsql_db.get(pgsql_cur, device_sql.format(device_name))
+    #     device_id = device[0]
+    #
+    #     sql = "SELECT id,info_str FROM device_face_info " \
+    #           "WHERE device_id={} LIMIT 1"
+    #     result = pgsql_db.get(pgsql_cur, sql.format(device_id))
+    #     if result:
+    #         d = {
+    #             'id': result[0],
+    #             'info_str': ",".join(fid_list),
+    #             'update_timestamp': '{}'.format(int(time.time()))
+    #         }
+    #         pgsql_db.update(pgsql_cur, d, 'device_face_info')
+    #     else:
+    #         d = {
+    #             'device_id': device_id,
+    #             'info_str': ",".join(fid_list),
+    #             'update_timestamp': '{}'.format(int(time.time()))
+    #         }
+    #         pgsql_db.insert(pgsql_cur, d, 'device_face_info')
+
+    @transaction(is_commit=False)
+    def device_people_list_upgrade(self, pgsql_cur, data):
+        """设备人员更新"""
+        pgsql_db = MysqlDbUtil
+        print(">>>>> device_people_list_upgrade")
+        self.logger.error("device_people_list_upgrade")
+        add_list = data['add_list']         # fid
+        del_list = data['del_list']         # fid
+        update_list = data['update_list']   # fid
+        device_name = data['device_name']
+
+        # del list
+        if len(del_list) < 60:
+            print 'del_list', del_list
+            for fid in del_list:
+                self._publish_del_people_msg(device_name, fid)
+
+        feature_sql = "SELECT feature FROM face_img WHERE id in ({})"
+        # update list
+        if len(update_list) < 60:
+            for fid in update_list:
+                obj = pgsql_db.get(
+                    pgsql_cur, feature_sql.format(",".join(update_list)))
+                print obj
+                if obj:
+                    print obj
+                    self._publish_update_people_msg(
+                        device_name, fid, obj[1], obj[0], obj[2])
+
+        # add list
+        if len(add_list) < 60:
+            for fid in add_list:
+                obj = pgsql_db.get(
+                    pgsql_cur, feature_sql.format(fid, mfr_pk, fid))
+                if obj:
+                    print obj
+                    self._publish_add_people_msg(
+                        device_name, fid, obj[0], obj[1], obj[2])
+
+    def send_get_people_data_msg(self, data):
+        """发送获取设备上人员数据的消息"""
+        device_name = data['device_name']
+        jdata = {
+            "cmd": "devwhitelist",
+            "pkt_inx": -1
+        }
+        self._pub_msg(device_name, jdata)
+
+    def clear_count(self, data):
+        """清空车内人数"""
+        device_name = data['device_name']
+        jdata = {
+            "cmd": "clearcnt",
+            "value": 0
+        }
+        self._pub_msg(device_name, jdata)
+
+    def delete_all_face(self, data):
+        """清空车内人数"""
+        device_name = data['device_name']
+        jdata = {
+            "cmd": "delallface"
+        }
+        self._pub_msg(device_name, jdata)
+
+    def set_oss_info(self, data):
+        """设置oss信息"""
+        device_name = data['device_name']
+        jdata = {
+            "cmd": "ossinfo",
+            "ossdomain": config.OSSDomain,
+            "osskeyid": config.OSSAccessKeyId,
+            "osskeysecret": config.OSSAccessKeySecret[12:] + config.OSSAccessKeySecret[:12]
+        }
+        self._pub_msg(device_name, jdata)
+

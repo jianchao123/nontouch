@@ -158,7 +158,7 @@ class MiniService(object):
         face_img.user_id = user.id
         face_img.img = ""  # bytes
         face_img.baidu_user_id = mobile
-        face_img.group_id = user.mobile
+        face_img.group_id = 'china'
         face_img.oss_url = url
         face_img.is_sub_account = False
         face_img.face_id = baidu_res["result"]["face_token"]

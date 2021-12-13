@@ -27,8 +27,8 @@ class TestingConfig(Config):
     OSS_BUCKET = "wgxing-test"
     OSS_REGION = "oss-cn-zhangjiakou"
     OSS_POINT = "oss-cn-zhangjiakou.aliyuncs.com"
-    OSS_ALL_KEY = "LTAIWE5CGeOiozf7"  # 所有权限
-    OSS_ALL_SECRET = "IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj"
+    OSS_ALL_KEY = "LTAI5tHYr3CZ59HCRLEocbDG"  # 所有权限
+    OSS_ALL_SECRET = "BMRI8WzUVMRbS6LHPM3bIiadWIPE8c"
 
     PAY_HOST = 'https://testpay.wgxing.com'
 

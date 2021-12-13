@@ -21,8 +21,8 @@ if env == 'PRO':
                       user="root", passwd="kIhHAWexFy7pU8qM", charset="utf8")
 
     OSSDomain = 'https://wgxing-pro.oss-cn-zhangjiakou.aliyuncs.com'
-    OSSAccessKeyId = 'LTAIWE5CGeOiozf7'
-    OSSAccessKeySecret = 'IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj'
+    OSSAccessKeyId = 'LTAI5tHYr3CZ59HCRLEocbDG'
+    OSSAccessKeySecret = 'BMRI8WzUVMRbS6LHPM3bIiadWIPE8c'
     OSSEndpoint = 'oss-cn-zhangjiakou.aliyuncs.com'
     OSSBucketName = 'wgxing-pro'
 
@@ -40,8 +40,8 @@ elif env == "TEST":
                       user="root", passwd="kIhHAWexFy7pU8qM", charset="utf8")
 
     OSSDomain = 'https://wgxing-test.oss-cn-zhangjiakou.aliyuncs.com'
-    OSSAccessKeyId = 'LTAIWE5CGeOiozf7'
-    OSSAccessKeySecret = 'IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj'
+    OSSAccessKeyId = 'LTAI5tHYr3CZ59HCRLEocbDG'
+    OSSAccessKeySecret = 'BMRI8WzUVMRbS6LHPM3bIiadWIPE8c'
     OSSEndpoint = 'oss-cn-zhangjiakou.aliyuncs.com'
     OSSBucketName = 'wgxing-test'
 
@@ -61,8 +61,8 @@ else:
                       user="root", passwd="kIhHAWexFy7pU8qM", charset="utf8")
 
     OSSDomain = 'https://wgxing-dev.oss-cn-beijing.aliyuncs.com'
-    OSSAccessKeyId = 'LTAIWE5CGeOiozf7'
-    OSSAccessKeySecret = 'IGuoRIxwMlPQqJ9ujWyTvSq2em4RDj'
+    OSSAccessKeyId = 'LTAI5tHYr3CZ59HCRLEocbDG'
+    OSSAccessKeySecret = 'BMRI8WzUVMRbS6LHPM3bIiadWIPE8c'
     OSSEndpoint = 'oss-cn-beijing.aliyuncs.com'
     OSSBucketName = 'wgxing-dev'
 
