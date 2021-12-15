@@ -17,6 +17,7 @@ sys.path.insert(0, current_dir)
 import pika
 from msgqueue.consume_business import BusConsumer
 from msgqueue.consume_business import HeartBeatConsumer
+from msgqueue.consume_business import DeviceConsumer
 
 print("start subscriber")
 
@@ -31,10 +32,12 @@ def start_subscriber():
     channel.exchange_declare(exchange='bus_exchange', exchange_type='topic')
     channel.exchange_declare(exchange='heartbeat_exchange',
                              exchange_type='topic')
+    channel.exchange_declare(exchange='device_exchange', exchange_type='topic')
 
     # 声明消息队列, durable消息队列持久化
     channel.queue_declare(queue="bus_queue", durable=True)
     channel.queue_declare(queue='heartbeat_queue', durable=True)
+    channel.queue_declare(queue="device_queue", durable=True)
 
     # 绑定交换机和队列(一个交换机可以绑定多个队列)
     # routing_key路由器(绑定到队列上),携带该路由的消息都将被分发到该消息队列
@@ -44,6 +47,9 @@ def start_subscriber():
     channel.queue_bind(exchange='heartbeat_exchange',
                        queue="heartbeat_queue",
                        routing_key="heartbeat")
+    channel.queue_bind(exchange='device_exchange',
+                       queue="device_queue",
+                       routing_key="device.*")
 
     channel.basic_qos(prefetch_count=1)
 
@@ -60,6 +66,12 @@ def start_subscriber():
         on_message_callback=heartbeat_consumer.heartbeat_callback,
         auto_ack=False
     )
+
+    device_consumer = DeviceConsumer()
+    channel.basic_consume(
+        queue="device_queue",
+        on_message_callback=device_consumer.device_callback,
+        auto_ack=False)
 
     channel.start_consuming()
 

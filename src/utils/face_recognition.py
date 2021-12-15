@@ -5,7 +5,7 @@ import requests
 import base64
 
 res = requests.get(
-    "http://cdbus-dev.oss-cn-shanghai.aliyuncs.com/person/face/123456987012365487.png")
+    "http://wgxing-dev.oss-cn-shanghai.aliyuncs.com/person/face/123456987012365487.png")
 image = base64.b64encode(res.content).decode("utf8")
 
 

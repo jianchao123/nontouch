@@ -40,13 +40,9 @@ class AcsManager(object):
         self.oss_access_key_id = oss_access_key_id
         self.oss_key_secret = oss_key_secret
 
-    def _upgrade_version(self, device_name, mfr_name):
+    def _upgrade_version(self, device_name):
         """升级版本"""
-        # 是否是深圳的设备
-        if mfr_name == 'WUHAN':
-            self._send_device_msg(device_name, RedisKey.WUHAN_UPGRADE_JSON)
-        elif mfr_name == 'SHENZHEN':
-            self._send_device_msg(device_name, RedisKey.SHENZHEN_UPGRADE_JSON)
+        self._send_device_msg(device_name, RedisKey.UPGRADE_JSON)
 
     def _set_oss_info(self, device_name):
         """设置oss信息"""
@@ -146,7 +142,7 @@ class AcsManager(object):
                 rds_conn.delete(k)
 
     @staticmethod
-    def get_car_data(pgsql_db, pgsql_cur, redis_db, dev_name):
+    def get_car_data(mysql_db, mysql_cur, redis_db, dev_name):
         """获取车辆信息
         什么时候删除缓存
         1.修改车辆
@@ -156,11 +152,11 @@ class AcsManager(object):
         if not car_data:
             device_sql = """
                     SELECT dev.id,CAR.id,CAR.license_plate_number 
-                    FROM device AS dev 
+                    FROM iot_device AS dev 
                     INNER JOIN car CAR ON CAR.id=dev.car_id 
                     WHERE dev.device_name='{}' LIMIT 1
                     """
-            device_result = pgsql_db.get(pgsql_cur, device_sql.format(dev_name))
+            device_result = mysql_db.get(mysql_cur, device_sql.format(dev_name))
             cur_device_id = device_result[0]
             cur_car_id = device_result[1]
             license_plate_number = device_result[2]
@@ -173,7 +169,7 @@ class AcsManager(object):
         return d['devid'], d['carid'], d['chepai']
 
     @staticmethod
-    def get_worker_data(pgsql_db, pgsql_cur, redis_db, cur_car_id):
+    def get_worker_data(mysql_db, mysql_cur, redis_db, cur_car_id):
         """
         什么时候删除缓存
         1.修改工作人员删除缓存
@@ -186,8 +182,8 @@ class AcsManager(object):
             zgy_name = ""
             driver_mobile = ""
             zgy_mobile = ""
-            worker_result = pgsql_db.query(
-                pgsql_cur, worker_sql.format(cur_car_id))
+            worker_result = mysql_db.query(
+                mysql_cur, worker_sql.format(cur_car_id))
             for row in worker_result:
                 if row[0] == 1:
                     driver_name = row[2]
@@ -205,13 +201,13 @@ class AcsManager(object):
                d['driver_mobile'], d['zgy_mobile']
 
     # @staticmethod
-    # def _get_school_cache(pgsql_db, pgsql_cur, redis_db, school_id):
+    # def _get_school_cache(mysql_db, mysql_cur, redis_db, school_id):
     #     school_name = \
     #         redis_db.hget(RedisKey.CACHE_SCHOOL_NAME_DATA, str(school_id))
     #     if not school_name:
     #         sql = "SELECT school_name FROM school " \
     #               "WHERE id={} LIMIT 1".format(school_id)
-    #         school_name = pgsql_db.get(pgsql_cur, sql)[0]
+    #         school_name = mysql_db.get(mysql_cur, sql)[0]
     #         redis_db.hset(RedisKey.CACHE_SCHOOL_NAME_DATA,
     #                       str(school_id), school_name)
     #         return school_name
@@ -219,7 +215,7 @@ class AcsManager(object):
     #         return school_name
 
     @db.transaction(is_commit=True)
-    def add_order(self, pgsql_cur, fid, gps_str, add_time, dev_name, cnt):
+    def add_order(self, mysql_cur, fid, gps_str, add_time, dev_name, cnt):
         """
         添加订单
         报警刷脸不需要,影响逻辑
@@ -231,7 +227,7 @@ class AcsManager(object):
         if redis_db.sismember(RedisKey.REMOVE_DUP_ORDER_SET, dup_key):
             return
         redis_db.sadd(RedisKey.REMOVE_DUP_ORDER_SET, dup_key)
-        pgsql_db = db.PgsqlDbUtil
+        mysql_db = db.PgsqlDbUtil
 
         now = datetime.now()
         cur_hour = now.hour
@@ -260,11 +256,11 @@ class AcsManager(object):
                 order_type = 4
 
         cur_device_id, cur_car_id, license_plate_number\
-            = AcsManager.get_car_data(pgsql_db, pgsql_cur, redis_db, dev_name)
+            = AcsManager.get_car_data(mysql_db, mysql_cur, redis_db, dev_name)
 
         driver_name, zgy_name, driver_mobile, zgy_mobile = \
             AcsManager.get_worker_data(
-                pgsql_db, pgsql_cur, redis_db, cur_car_id)
+                mysql_db, mysql_cur, redis_db, cur_car_id)
 
         stu_sql = """
         SELECT stu.id, stu.stu_no, stu.nickname,shl.id,shl.school_name,
@@ -273,7 +269,7 @@ class AcsManager(object):
         INNER JOIN school shl ON shl.id=stu.school_id 
         WHERE f.id={} LIMIT 1
         """
-        student_result = pgsql_db.get(pgsql_cur, stu_sql.format(fid))
+        student_result = mysql_db.get(mysql_cur, stu_sql.format(fid))
         if not student_result:
             return
         stu_id = student_result[0]
@@ -320,7 +316,7 @@ class AcsManager(object):
         d['driver_mobile'] = driver_mobile
         d['zgy_mobile'] = zgy_mobile
 
-        pgsql_db.insert(pgsql_cur, d, table_name='public.order')
+        mysql_db.insert(mysql_cur, d, table_name='public.order')
 
         if order_type == 1:
             order_type_name = u"上学上车"
@@ -405,17 +401,34 @@ class AcsManager(object):
                 rds_conn.delete(pkt_inx_key)
                 # 删除stream_no key,因为devwhitelist指令没有返回stream_no
                 rds_conn.delete("cur_{}_stream_no".format(device_name))
-                self.check_people_list(people_list, device_name)
+                self.check_person_list(people_list, device_name)
+
+    @staticmethod
+    def get_route_id(mysql_db, mysql_cur, device_name):
+        """获取线路id"""
+        car_ids = []
+        # 根据设备号查询线路id
+        sql = "SELECT car_id FROM iot_device WHERE device_name='{}' LIMIT 1"
+        iot_device = mysql_db.get(mysql_cur, sql.format(device_name))
+        if not iot_device:
+            return car_ids
+        sql = "SELECT route_id,route_id_1 FROM bus_car WHERE id = {} LIMIT 1"
+        buscar = mysql_db.get(mysql_cur, sql.format(iot_device[0]))
+        if buscar[0]:
+            car_ids.append(buscar[0])
+        if buscar[1]:
+            car_ids.append(buscar[1])
+        return car_ids
 
     @db.transaction(is_commit=True)
-    def check_people_list(self, pgsql_cur, people_list, device_name):
+    def check_person_list(self, mysql_cur, people_list, device_name):
         """
         检查人员列表
         (单设备检查人员是否需要更新)
         :return:
         """
         rds_conn = db.rds_conn
-        pgsql_db = db.PgsqlDbUtil
+        mysql_db = db.PgsqlDbUtil
         fid_dict = {}
         for row in people_list:
             data = base64.b64decode(row)
@@ -430,24 +443,21 @@ class AcsManager(object):
                 offset += 16
         print "--------------fid_dict--------------------"
         print fid_dict
-        mfr_sql = "SELECT mfr_id FROM device WHERE device_name = '{}' LIMIT 1"
-        mfr_pk = pgsql_db.get(pgsql_cur, mfr_sql.format(device_name))[0]
-
-        sql = """
-        SELECT f.id, ft.feature_crc,F.nickname FROM face AS F 
-INNER JOIN feature AS ft ON ft.face_id=F.id 
-INNER JOIN student AS stu ON stu.id=F.stu_id 
-WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={} 
-        """
-        device_sql = "SELECT car_id,device_type FROM device " \
-                     "WHERE device_name = '{}' LIMIT 1"
-        device_object = pgsql_db.get(pgsql_cur, device_sql.format(device_name))
-        dev_car_id = device_object[0]
-        device_type = device_object[1]
-
-        if dev_car_id:
+        bus_route_ids = AcsManager.get_route_id(mysql_db, mysql_cur, device_name)
+        # 为空表示车辆没有绑定线路或设备没有绑定车辆
+        if not bus_route_ids:
+            # 清空设备所有人脸
+            producer.delete_all_face(device_name)
+            # 提示
+            producer.update_chepai(device_name, "没有绑定车辆或线路", 6, 0, 20)
+        else:
+            # 根据线路ids查询fids
             device_fid_set = set(fid_dict.keys())
-            results = pgsql_db.query(pgsql_cur, sql.format(dev_car_id, mfr_pk))
+
+            sql = "SELECT fid FROM passenger_weekly_count " \
+                  "WHERE route_id in ({})"
+            results = mysql_db.query(
+                mysql_cur, sql.format(",".join([str(x) for x in bus_route_ids])))
             face_ids = [str(row[0]) for row in results]
 
             add_list = list(set(face_ids) - set(device_fid_set))
@@ -465,111 +475,76 @@ WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={}
                     if feature_crc != fid_dict[str(pk)]:
                         update_list.append(str(pk))
 
-            if rds_conn.get(RedisKey.QUERY_DEVICE_PEOPLE):
-                # 保存设备上的人员到数据库
-                rds_conn.delete(RedisKey.QUERY_DEVICE_PEOPLE)
-                producer.device_people_list_save(
-                    ",".join(people_list), face_ids, device_name)
-            else:
-                # 更新设备上的人员
-                producer.device_people_update_msg(
-                    add_list, del_list, update_list, device_name)
+            # 放到消息队列
+            producer.device_people_update_msg(
+                add_list, del_list, update_list, device_name)
             print add_list, del_list, update_list
-        else:
-            # 刷脸设备
-            if device_type == 1:
-                # 清空设备所有人脸
-                producer.delete_all_face(device_name)
-                # 提示
-                producer.update_chepai(device_name, "没有绑定车辆", 6, 0, 20)
-            elif device_type == 2:
-                # 清空设备所有人脸
-                producer.delete_all_face(device_name)
-                # 提示
-                producer.update_chepai(device_name, "生成特征值专用", 6, 3, 20)
 
     @db.transaction(is_commit=True)
-    def create_device(self, pgsql_cur, mac, shd_devid):
+    def create_device(self, mysql_cur, mac, shd_devid):
         """
         创建设备
         """
         from mns_subscriber import config
         rds_conn = db.rds_conn
-        pgsql_db = db.PgsqlDbUtil
-        config.logger.info('create device {} {}'.format(shd_devid, mac))
-        # 创建设备只能顺序执行,无需使用自旋锁
-        setnx_key = rds_conn.setnx('create_device', 1)
-        if setnx_key:
-            try:
-                machine_sql = "SELECT id FROM machine WHERE mac='{}' LIMIT 1"
-                dev_sql = "SELECT id FROM device WHERE mac='{}' LIMIT 1"
+        mysql_db = db.PgsqlDbUtil
+        config.logger.info('create iot_device {} {}'.format(shd_devid, mac))
 
-                obj = pgsql_db.get(pgsql_cur, dev_sql.format(mac))
-                if obj:
-                    return None
+        dev_sql = "SELECT id FROM iot_device WHERE mac='{}' LIMIT 1"
 
-                sql = 'SELECT id,device_name FROM device ' \
-                      'ORDER BY id DESC LIMIT 1'
-                obj = pgsql_db.get(pgsql_cur, sql)
-                if not obj:
-                    dev_name = 'dev_1'
-                else:
-                    arr = obj[1].split('_')
-                    prefix = arr[0]
-                    suffix = arr[1]
-                    dev_name = prefix + '_' + str(int(suffix) + 1)
+        obj = mysql_db.get(mysql_cur, dev_sql.format(mac))
+        if obj:
+            return None
 
-                # 创建设备
-                request = RegisterDeviceRequest()
-                request.set_accept_format('json')
+        sql = 'SELECT id,device_name FROM iot_device ' \
+              'ORDER BY id DESC LIMIT 1'
+        obj = mysql_db.get(mysql_cur, sql)
+        if not obj:
+            dev_name = 'dev_1'
+        else:
+            arr = obj[1].split('_')
+            prefix = arr[0]
+            suffix = arr[1]
+            dev_name = prefix + '_' + str(int(suffix) + 1)
 
-                request.set_ProductKey(self.product_key)
-                request.set_DeviceName(dev_name)
-                response = self.client.do_action_with_exception(request)
-                response = json.loads(response)
-                if not response['Success']:
-                    config.logger.info('api create fail {}'.format(mac))
-                    return None
-                # 添加记录
-                d = {
-                    'device_name': response['Data']['DeviceName'],
-                    'status': 1,
-                    'mac': mac,
-                    'product_key': response['Data']['ProductKey'],
-                    'device_secret': response['Data']['DeviceSecret'],
-                    'sound_volume': 6,
-                    'license_plate_number': ''
-                }
-                pgsql_db.insert(pgsql_cur, d, table_name='device')
+        # 创建设备
+        request = RegisterDeviceRequest()
+        request.set_accept_format('json')
 
-                # 发布消息注册
-                msg = {
-                    "cmd": "devid",
-                    "devname": response['Data']['DeviceName'],
-                    "productkey": response['Data']['ProductKey'],
-                    "devsecret": response['Data']['DeviceSecret'],
-                    "devicetype": 0,
-                    "time": int(time.time()),
-                    'dev_mac': mac
-                }
-                retd = self._send_device_msg('newdev', msg)
-                config.logger.error(retd)
-                rds_conn.hset(RedisKey.DEVICE_CUR_STATUS, dev_name, 1)
-                rds_conn.rpush('DEVICE_NAME_QUEUE', dev_name)
+        request.set_ProductKey(self.product_key)
+        request.set_DeviceName(dev_name)
+        response = self.client.do_action_with_exception(request)
+        response = json.loads(response)
+        if not response['Success']:
+            config.logger.info('api create fail {}'.format(mac))
+            return None
+        # 添加记录
+        d = {
+            'device_name': response['Data']['DeviceName'],
+            'status': 1,
+            'mac': mac,
+            'product_key': response['Data']['ProductKey'],
+            'device_secret': response['Data']['DeviceSecret'],
+            'sound_volume': 6,
+            'license_plate_number': ''
+        }
+        mysql_db.insert(mysql_cur, d, table_name='iot_device')
 
-                # 存在是SHENZHEN 不存在是WUHAN
-                obj = pgsql_db.get(
-                    pgsql_cur, machine_sql.format(mac))
-                if obj:
-                    # 2是SHENZHEN
-                    rds_conn.hset(RedisKey.MFR_DEVICE_HASH, dev_name,
-                                  'SHENZHEN')
-                else:
-                    # 1是WUHAN
-                    rds_conn.hset(RedisKey.MFR_DEVICE_HASH, dev_name, 'WUHAN')
+        # 发布消息注册
+        msg = {
+            "cmd": "devid",
+            "devname": response['Data']['DeviceName'],
+            "productkey": response['Data']['ProductKey'],
+            "devsecret": response['Data']['DeviceSecret'],
+            "devicetype": 0,
+            "time": int(time.time()),
+            'dev_mac': mac
+        }
+        retd = self._send_device_msg('newdev', msg)
+        config.logger.error(retd)
+        rds_conn.hset(RedisKey.DEVICE_CUR_STATUS, dev_name, 1)
+        rds_conn.rpush('DEVICE_NAME_QUEUE', dev_name)
 
-            finally:
-                rds_conn.delete('create_device')
         return None
 
     def _set_device_work_mode(self, dev_name, license_plate_number,
@@ -581,8 +556,8 @@ WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={}
                            cur_volume, person_limit)
 
     @db.transaction(is_commit=False)
-    def _init_people(self, pgsql_cur, people_list, device_name):
-        pgsql_db = db.PgsqlDbUtil
+    def _init_people(self, mysql_cur, people_list, device_name):
+        mysql_db = db.PgsqlDbUtil
         fid_dict = {}
         for row in people_list:
             data = base64.b64decode(row)
@@ -601,12 +576,12 @@ WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={}
         INNER JOIN student AS stu ON stu.id=F.stu_id 
         WHERE F.status = 4 AND stu.status = 1 AND stu.car_id={} 
         """
-        device_sql = "SELECT car_id FROM device " \
+        device_sql = "SELECT car_id FROM iot_device " \
                      "WHERE device_name = '{}' LIMIT 1"
-        dev_car_id = pgsql_db.get(pgsql_cur, device_sql.format(device_name))[0]
+        dev_car_id = mysql_db.get(mysql_cur, device_sql.format(device_name))[0]
         if dev_car_id:
             device_fid_set = set(fid_dict.keys())
-            results = pgsql_db.query(pgsql_cur, sql.format(dev_car_id))
+            results = mysql_db.query(mysql_cur, sql.format(dev_car_id))
             face_ids = [str(row[0]) for row in results]
 
             add_list = list(set(face_ids) - set(device_fid_set))
@@ -622,32 +597,27 @@ WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={}
         rds_conn = db.rds_conn
         all_heartbeat_val = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         rds_conn.hset(RedisKey.ALL_HEARTBEAT_HASH, device_name, all_heartbeat_val)
-
-        mfr_name = RedisKey.get_device_mfr_name(rds_conn, device_name)
-        version_k = mfr_name + '_VERSION_NO'
-        if cur_version < getattr(RedisKey, version_k):
-            #obj = rds_conn.hget(RedisKey.MFR_DEVICE_HASH, device_name)
-            #if obj:
-            self._upgrade_version(device_name, mfr_name)
+        # 小于当前版本号就更新
+        if cur_version < 1:
+            self._upgrade_version(device_name)
 
     @db.transaction(is_commit=True)
-    def _update_device(self, pgsql_cur, data):
-        pgsql_db = db.PgsqlDbUtil
-        pgsql_db.update(pgsql_cur, data, table_name='device')
+    def _update_device(self, mysql_cur, data):
+        mysql_db = db.PgsqlDbUtil
+        mysql_db.update(mysql_cur, data, table_name='iot_device')
 
     @db.transaction(is_commit=False)
-    def _get_device_info_data(self, pgsql_cur, device_name):
-        pgsql_db = db.PgsqlDbUtil
+    def _get_device_info_data(self, mysql_cur, device_name):
+        mysql_db = db.PgsqlDbUtil
 
         sql = "SELECT id,status,version_no,sound_volume," \
               "license_plate_number,device_type,person_limit" \
-              " FROM device WHERE device_name='{}' LIMIT 1"
-        device = pgsql_db.get(pgsql_cur, sql.format(device_name))
-        return device[0], device[1], device[2], device[3], \
-               device[4], device[5], device[6]
+              " FROM iot_device WHERE device_name='{}' LIMIT 1"
+        iot_device = mysql_db.get(mysql_cur, sql.format(device_name))
+        return iot_device[0], iot_device[1], iot_device[2], iot_device[3], \
+               iot_device[4], iot_device[5], iot_device[6]
 
-    def init_device_params(self, cur_version, device_name,
-                           dev_time, shd_devid, gps):
+    def init_device_params(self, device_name, shd_devid):
         """
         初始化设备参数
         """
@@ -705,21 +675,21 @@ WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={}
             self._update_device(d)
 
     @db.transaction(is_commit=False)
-    def _get_sound_vol_by_name(self, pgsql_cur, dev_name):
-        pgsql_db = db.PgsqlDbUtil
+    def _get_sound_vol_by_name(self, mysql_cur, dev_name):
+        mysql_db = db.PgsqlDbUtil
         sql = "SELECT sound_volume,car_id,device_type " \
-              "FROM device WHERE device_name='{}' LIMIT 1"
+              "FROM iot_device WHERE device_name='{}' LIMIT 1"
         chepai_sql = "SELECT license_plate_number FROM car WHERE id={} LIMIT 1"
-        result = pgsql_db.get(pgsql_cur, sql.format(dev_name))
+        result = mysql_db.get(mysql_cur, sql.format(dev_name))
         car_id = result[1]
         if car_id:
-            chepai = pgsql_db.get(pgsql_cur, chepai_sql.format(car_id))[0]
+            chepai = mysql_db.get(mysql_cur, chepai_sql.format(car_id))[0]
         else:
             chepai = ""
         return result[0], chepai, result[2]
 
-    def device_incar_person_number(self, dev_name, cnt):
-        """车内人员数"""
+    def device_rdskey_status_update(self, dev_name, cnt):
+        """修改设备在redis 里的状态"""
         rds_conn = db.rds_conn
         cur_status = rds_conn.hget(RedisKey.DEVICE_CUR_STATUS, dev_name)
         if cur_status and int(cur_status) == 5:
@@ -768,33 +738,33 @@ WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={}
                     float(longitude), float(latitude))
                 gps_str = '{},{}'.format(longitude, latitude)
             else:
-                gps_str = '116.290435,40.032377'
+                gps_str = ""
         rds_conn.hset(RedisKey.DEVICE_CUR_GPS, device_name, gps_str)
 
     @db.transaction(is_commit=True)
-    def save_imei(self, pgsql_cur, device_name, imei):
-        pgsql_db = db.PgsqlDbUtil
-        sql = "SELECT id FROM device WHERE device_name='{}' LIMIT 1"
-        obj = pgsql_db.get(pgsql_cur, sql.format(device_name))
+    def save_imei(self, mysql_cur, device_name, imei):
+        mysql_db = db.PgsqlDbUtil
+        sql = "SELECT id FROM iot_device WHERE device_name='{}' LIMIT 1"
+        obj = mysql_db.get(mysql_cur, sql.format(device_name))
         if obj:
             d = {
                 'id': obj[0],
                 'imei': imei
             }
-            pgsql_db.update(pgsql_cur, d, table_name='device')
+            mysql_db.update(mysql_cur, d, table_name='iot_device')
 
     @db.transaction(is_commit=True)
-    def save_feature(self, pgsql_cur, device_name, fid, feature):
-        pgsql_db = db.PgsqlDbUtil
+    def save_feature(self, mysql_cur, device_name, fid, feature):
+        mysql_db = db.PgsqlDbUtil
         rds_conn = db.rds_conn
         d = defaultdict()
-        mfr_id = pgsql_db.get(
-            pgsql_cur, "SELECT mfr_id FROM device WHERE "
+        mfr_id = mysql_db.get(
+            mysql_cur, "SELECT mfr_id FROM iot_device WHERE "
                        "device_name='{}' LIMIT 1".format(device_name))[0]
         sql = "SELECT id,face_id FROM feature " \
               "WHERE mfr_id={} AND face_id={} LIMIT 1"
         print sql.format(mfr_id, fid)
-        feature_obj = pgsql_db.get(pgsql_cur, sql.format(mfr_id, fid))
+        feature_obj = mysql_db.get(mysql_cur, sql.format(mfr_id, fid))
         feature_id = feature_obj[0]
         face_id = feature_obj[1]
         if feature:
@@ -806,13 +776,13 @@ WHERE F.status=4 AND stu.status=1 AND stu.car_id={} AND ft.mfr_id={}
         else:
             d['id'] = feature_id
             d['status'] = 4     # 生成失败
-        pgsql_db.update(pgsql_cur, d, table_name='feature')
+        mysql_db.update(mysql_cur, d, table_name='feature')
         # if not feature:
         #     data = {
         #         'id': face_id,
         #         'status': 5  # 预期数据准备失败
         #     }
-        #     pgsql_db.update(pgsql_cur, data, table_name='face')
+        #     mysql_db.update(mysql_cur, data, table_name='face')
         # 将设备从使用中删除
         rds_conn.hdel(RedisKey.DEVICE_USED, device_name)
 

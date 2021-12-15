@@ -64,16 +64,14 @@ class ReceiveMessage(object):
                     #         jdata['devtime']).strftime('%Y-%m-%d %H:%M:%S')))
                     acs_manager.check_version(
                         dev_name, jdata['version'], jdata['devtime'])
-                    # 以下业务版本最低264
-                    if jdata['version'] >= 264:
+                    if jdata['version'] == 1:
                         ret = acs_manager.init_device_params(
-                            jdata['version'], dev_name, jdata['devtime'],
-                            jdata['shd_devid'], jdata['gps'])
+                            dev_name, jdata['shd_devid'])
                         acs_manager.device_rebooted_setting_open_time(
                             dev_name, jdata['gps'], ret)
                         # 非0直接跳过,0表示已经初始化完成,因为低版本jdata没有cnt
                         if not ret:
-                            acs_manager.device_incar_person_number(
+                            acs_manager.device_rdskey_status_update(
                                 dev_name, jdata['cnt'])
 
             elif cmd == 'devwhitelist2':
@@ -82,29 +80,31 @@ class ReceiveMessage(object):
                     dev_name, jdata['data'], jdata['pkt_cnt'])
 
             elif cmd == 'addface':
-                # 生成特征值返回的信息
+                # 生成特征值返回的信息(公交不需要)
                 print jdata
-                if 'feature_type' in jdata:
-                    acs_manager.save_feature(
-                        dev_name, jdata['fid'], jdata['feature'])
-                    if jdata['feature']:
-                        logger.info(u'生成特征值成功{}'.format(jdata['fid']))
-                    else:
-                        logger.info(u"生成特征值失败{}".format(jdata['fid']))
+                # if 'feature_type' in jdata:
+                #     acs_manager.save_feature(
+                #         dev_name, jdata['fid'], jdata['feature'])
+                #     if jdata['feature']:
+                #         logger.info(u'生成特征值成功{}'.format(jdata['fid']))
+                #     else:
+                #         logger.info(u"生成特征值失败{}".format(jdata['fid']))
             elif cmd == 'updateface':
                 pass
             elif cmd == 'delface':
                 pass
             elif cmd == 'record':
                 if jdata['fid'] == -1:
-                    log_id = int(jdata['gps'].split('|')[0])
-                    # acc关闭
-                    if log_id == 3:
-                        acs_manager.acc_close(dev_name, jdata['addtime'])
-                    elif log_id == 4:
-                        acs_manager.acc_open(dev_name)
-                    elif log_id == 20:
-                        print u"防滞留检测开启"
+                    pass
+                    # acc关闭在公交上没有使用
+                    # log_id = int(jdata['gps'].split('|')[0])
+                    # # acc关闭
+                    # if log_id == 3:
+                    #     acs_manager.acc_close(dev_name, jdata['addtime'])
+                    # elif log_id == 4:
+                    #     acs_manager.acc_open(dev_name)
+                    # elif log_id == 20:
+                    #     print u"防滞留检测开启"
                 else:
                     logger.error("{}".format(str(jdata)))
                     if not jdata['type']:
@@ -130,7 +130,8 @@ class ReceiveMessage(object):
             elif cmd == 'syndata_ext':
                 pass
             elif cmd == 'poweroff':
-                acs_manager.clear_setting(dev_name, jdata['seconds'])
+                #acs_manager.clear_setting(dev_name, jdata['seconds'])
+                pass
 
         # 删除消息
         try:

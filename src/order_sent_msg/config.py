@@ -1,19 +1,10 @@
 # coding:utf-8
 import os
 import configparser
-from utils import get_logger
 
-project_name = "school_bus"
+project_name = "nontouch_1"
 project_dir = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.realpath(__file__))))
-env_dist = os.environ
-env = env_dist.get('BUS_ENV')
-if env == "TEST":
-    log_path = "/data/logs/{}/mns".format(project_name)
-elif env == 'PRO':
-    log_path = "/data/logs/{}/mns".format(project_name)
-else:
-    log_path = project_dir + "/logs/mns"
 
 config_name = os.environ.get('NONTOUCH_1_ENV', 'DEV')
 if config_name == 'PRO':
@@ -46,14 +37,14 @@ for section in secs:
     #     print k, v
 
 config_namespace = globals()
-redis_conf = dict(host="127.0.0.1", port=6379, db=0, decode_responses=True)
-mysql_conf = dict(host=config_namespace['mysql_host'],
-                  db=config_namespace['mysql_db'],
-                  port=config_namespace['mysql_port'],
-                  user=config_namespace['mysql_user'],
-                  passwd=config_namespace['mysql_passwd'],
-                  charset="utf8")
+# 公交redis使用3
+redis_conf = dict(host=config_namespace['redis_host'],
+                  port=config_namespace['redis_port'],
+                  db=config_namespace['redis_db'],
+                  decode_responses=True)
 
-logger = get_logger(log_path)
-logger.info('--------ENV={}---------------'.format(env))
-print env
+# 让配置文件先加载
+from utils import get_logger
+logger = get_logger(project_dir + config_namespace['log_path'])
+logger.info('--------ENV={}---------------'.format(config_name))
+print config_name

@@ -13,6 +13,7 @@ channel = queue_conn.channel()
 # channel.exchange_declare(exchange='device_exchange', exchange_type='topic')
 # channel.exchange_declare(exchange='excel_exchange', exchange_type='topic')
 channel.exchange_declare(exchange='bus_exchange', exchange_type='topic')
+channel.exchange_declare(exchange='device_exchange', exchange_type='topic')
 
 
 def _publish_msg(exchange, routing_key, message):
@@ -46,6 +47,49 @@ def gen_feature(fid, oss_url):
     }
     _publish_msg('bus_exchange', 'bus.gen_feature', json.dumps(data))
 
+
+# 设备相关
+def delete_all_face(device_name):
+    data = {'device_name': device_name}
+    _publish_msg('device_exchange', 'device.delallface', json.dumps(data))
+
+
+def update_chepai(device_name, chepai, cur_volume, workmode, person_limit):
+    """更新车牌"""
+    data = {
+        "chepai": chepai,
+        "device_name": device_name,
+        "cur_volume": cur_volume,
+        "workmode": workmode,
+        "person_limit": person_limit
+    }
+    _publish_msg('device_exchange', 'device.updatechepai', json.dumps(data))
+
+
+def dev_while_list(device_name):
+    data = {
+        'dev_name': device_name
+    }
+    _publish_msg('device_exchange', 'device.devwhitelist', json.dumps(data))
+
+
+def device_people_update_msg(add_list, del_list, update_list, device_name):
+    """设备人员列表更新"""
+    data = {
+        "add_list": add_list,
+        "del_list": del_list,
+        "update_list": update_list,
+        "device_name": device_name
+    }
+    _publish_msg('device_exchange', 'device.list', json.dumps(data))
+
+
+def device_oss_info(device_name):
+    """oss 信息"""
+    data = {
+        "device_name": device_name
+    }
+    _publish_msg('device_exchange', 'device.ossinfo', json.dumps(data))
 
 # 测试用户创建
 if __name__ == "__main__":

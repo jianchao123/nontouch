@@ -294,10 +294,6 @@ class DeviceConsumer(object):
         routing_suffix = arr[-1]
         if routing_suffix == 'list':
             self.device_business.device_people_list_upgrade(data)
-        if routing_suffix == 'listsave':
-            self.device_business.device_people_list_save(data)
-        if routing_suffix == 'getdevicepeopledata':
-            self.device_business.send_get_people_data_msg(data)
         if routing_suffix == 'updatechepai':
             self.device_business.update_chepai(data)
         if routing_suffix == 'devwhitelist':
@@ -315,7 +311,7 @@ class DeviceConsumer(object):
 class DeviceBusiness(object):
     """设备业务"""
 
-    tts = "https://cdbus-dev.oss-cn-shanghai." \
+    tts = "https://wgxing-dev.oss-cn-shanghai." \
           "aliyuncs.com/people/video/qsc.aac"
 
     def __init__(self, product_key, mns_access_key_id,
@@ -436,12 +432,6 @@ class DeviceBusiness(object):
 
     def dev_white_list_msg(self, data):
         dev_name = data['dev_name']
-
-        try:
-            rds_conn.delete("{}_pkt_inx".format(dev_name))
-            rds_conn.delete("person_raw_{}".format(dev_name))
-        except:
-            pass
         self._publish_dev_white_list(dev_name)
 
     def update_chepai(self, data):
@@ -515,36 +505,27 @@ class DeviceBusiness(object):
             for fid in del_list:
                 self._publish_del_people_msg(device_name, fid)
 
-        feature_sql = "SELECT feature FROM face_img WHERE id in ({})"
+        feature_sql = "SELECT feature FROM face_img WHERE id = {}"
         # update list
         if len(update_list) < 60:
             for fid in update_list:
                 obj = pgsql_db.get(
-                    pgsql_cur, feature_sql.format(",".join(update_list)))
+                    pgsql_cur, feature_sql.format(fid))
                 print obj
                 if obj:
                     print obj
                     self._publish_update_people_msg(
-                        device_name, fid, obj[1], obj[0], obj[2])
+                        device_name, fid, "", obj[0], "")
 
         # add list
         if len(add_list) < 60:
             for fid in add_list:
                 obj = pgsql_db.get(
-                    pgsql_cur, feature_sql.format(fid, mfr_pk, fid))
+                    pgsql_cur, feature_sql.format(fid))
                 if obj:
                     print obj
                     self._publish_add_people_msg(
-                        device_name, fid, obj[0], obj[1], obj[2])
-
-    def send_get_people_data_msg(self, data):
-        """发送获取设备上人员数据的消息"""
-        device_name = data['device_name']
-        jdata = {
-            "cmd": "devwhitelist",
-            "pkt_inx": -1
-        }
-        self._pub_msg(device_name, jdata)
+                        device_name, fid, obj[0], "", "")
 
     def clear_count(self, data):
         """清空车内人数"""
