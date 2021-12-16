@@ -136,4 +136,4 @@ if __name__ == '__main__':
     # app.register_blueprint(settlement, url_prefix='/api_backend/v1')
     # app.register_blueprint(userprofile, url_prefix='/api_backend/v1')
     # app.register_blueprint(mini, url_prefix='/api_backend/v1')
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5000)

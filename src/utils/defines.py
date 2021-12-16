@@ -79,6 +79,7 @@ class SubErrorCode(object):
     DEVICE_NOT_FOUND_ERROR = (200098, u"根据上送的设备号找不到设备")
     DEVICE_NOT_FOUND_SUB_ACCOUNT = (200099, u"未在数据库找到该子账户")
     DEVICE_GPS_CONVERSION_ERROR = (200100, u"设备上送GPS转换错误")
+    DEVICE_IOT_MAC_NOT_FOUND = (200101, u"设备mac找不到")
 
     CERT_IDENTITY_ALREADY_BINDING_USER = (200201, u"该身份已经绑定用户")
     CERT_REPETITION_COMMIT = (200081, u"重复提审")

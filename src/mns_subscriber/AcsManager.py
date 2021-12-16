@@ -54,19 +54,6 @@ class AcsManager(object):
         }
         self._send_device_msg(device_name, jdata)
 
-    # @staticmethod
-    # def _pub_msg(devname, jdata):
-    #     rds_conn = db.rds_conn
-    #     k = rds_conn.get("stream_no_incr")
-    #     if k:
-    #         stream_no = rds_conn.incr("stream_no_incr")
-    #     else:
-    #         rds_conn.set("stream_no_incr", 1000000)
-    #         stream_no = 1000000
-    #
-    #     jdata["stream_no"] = stream_no
-    #     rds_conn.rpush("mns_list_" + devname, json.dumps(jdata, encoding="utf-8"))
-
     def _send_device_msg(self, devname, jdata):
         request = PubRequest()
         request.set_accept_format('json')
@@ -141,242 +128,6 @@ class AcsManager(object):
             if rds_stream_no and str(rds_stream_no) == str(stream_no):
                 rds_conn.delete(k)
 
-    @staticmethod
-    def get_car_data(mysql_db, mysql_cur, redis_db, dev_name):
-        """获取车辆信息
-        什么时候删除缓存
-        1.修改车辆
-        2.修改设备
-        """
-        car_data = redis_db.hget(RedisKey.CACHE_CAR_DATA, dev_name)
-        if not car_data:
-            device_sql = """
-                    SELECT dev.id,CAR.id,CAR.license_plate_number 
-                    FROM iot_device AS dev 
-                    INNER JOIN car CAR ON CAR.id=dev.car_id 
-                    WHERE dev.device_name='{}' LIMIT 1
-                    """
-            device_result = mysql_db.get(mysql_cur, device_sql.format(dev_name))
-            cur_device_id = device_result[0]
-            cur_car_id = device_result[1]
-            license_plate_number = device_result[2]
-            d = {'devid': cur_device_id,
-                 'carid': cur_car_id,
-                 'chepai': license_plate_number}
-            redis_db.hset(RedisKey.CACHE_CAR_DATA, dev_name, json.dumps(d))
-        else:
-            d = json.loads(car_data)
-        return d['devid'], d['carid'], d['chepai']
-
-    @staticmethod
-    def get_worker_data(mysql_db, mysql_cur, redis_db, cur_car_id):
-        """
-        什么时候删除缓存
-        1.修改工作人员删除缓存
-        """
-        staff_data = redis_db.hget(RedisKey.CACHE_STAFF_DATA, str(cur_car_id))
-        if not staff_data:
-            worker_sql = 'SELECT duty_id,mobile,nickname ' \
-                         'FROM worker WHERE car_id={}'
-            driver_name = ""
-            zgy_name = ""
-            driver_mobile = ""
-            zgy_mobile = ""
-            worker_result = mysql_db.query(
-                mysql_cur, worker_sql.format(cur_car_id))
-            for row in worker_result:
-                if row[0] == 1:
-                    driver_name = row[2]
-                    driver_mobile = row[1]
-                else:
-                    zgy_name = row[2]
-                    zgy_mobile = row[1]
-            d = {'driver_name': driver_name, 'zgy_name': zgy_name,
-                 'driver_mobile': driver_mobile, 'zgy_mobile': zgy_mobile}
-            redis_db.hset(RedisKey.CACHE_STAFF_DATA,
-                          str(cur_car_id), json.dumps(d))
-        else:
-            d = json.loads(staff_data)
-        return d['driver_name'], d['zgy_name'], \
-               d['driver_mobile'], d['zgy_mobile']
-
-    # @staticmethod
-    # def _get_school_cache(mysql_db, mysql_cur, redis_db, school_id):
-    #     school_name = \
-    #         redis_db.hget(RedisKey.CACHE_SCHOOL_NAME_DATA, str(school_id))
-    #     if not school_name:
-    #         sql = "SELECT school_name FROM school " \
-    #               "WHERE id={} LIMIT 1".format(school_id)
-    #         school_name = mysql_db.get(mysql_cur, sql)[0]
-    #         redis_db.hset(RedisKey.CACHE_SCHOOL_NAME_DATA,
-    #                       str(school_id), school_name)
-    #         return school_name
-    #     else:
-    #         return school_name
-
-    @db.transaction(is_commit=True)
-    def add_order(self, mysql_cur, fid, gps_str, add_time, dev_name, cnt):
-        """
-        添加订单
-        报警刷脸不需要,影响逻辑
-        """
-
-        redis_db = db.rds_conn
-        # 因为消息队列的机制,数据可能重复,需要去重
-        dup_key = str(fid) + str(add_time)
-        if redis_db.sismember(RedisKey.REMOVE_DUP_ORDER_SET, dup_key):
-            return
-        redis_db.sadd(RedisKey.REMOVE_DUP_ORDER_SET, dup_key)
-        mysql_db = db.PgsqlDbUtil
-
-        now = datetime.now()
-        cur_hour = now.hour
-        from mns_subscriber import config
-        config.logger.error("------------cnt----------------{}".format(cnt))
-        odd_even = cnt % 2
-        # 是上车就入集合
-        k = RedisKey.STUDENT_SET.format(dev_name)
-        if odd_even % 2:
-            redis_db.sadd(k, fid)
-        else:
-            redis_db.srem(k, fid)
-            # 集合为空,删除acc
-            if not redis_db.scard(k):
-                redis_db.delete(RedisKey.ACC_CLOSE)
-        if cur_hour <= 12:
-            if odd_even:            # 上学上车
-                order_type = 1
-            elif not odd_even:      # 上学下车
-                order_type = 2
-
-        if cur_hour > 12:
-            if odd_even:            # 放学上车
-                order_type = 3
-            elif not odd_even:      # 放学下车
-                order_type = 4
-
-        cur_device_id, cur_car_id, license_plate_number\
-            = AcsManager.get_car_data(mysql_db, mysql_cur, redis_db, dev_name)
-
-        driver_name, zgy_name, driver_mobile, zgy_mobile = \
-            AcsManager.get_worker_data(
-                mysql_db, mysql_cur, redis_db, cur_car_id)
-
-        stu_sql = """
-        SELECT stu.id, stu.stu_no, stu.nickname,shl.id,shl.school_name,
-        stu.open_id_1,stu.open_id_2,stu.grade_id,stu.class_id FROM student stu 
-        INNER JOIN face f ON f.stu_id=stu.id 
-        INNER JOIN school shl ON shl.id=stu.school_id 
-        WHERE f.id={} LIMIT 1
-        """
-        student_result = mysql_db.get(mysql_cur, stu_sql.format(fid))
-        if not student_result:
-            return
-        stu_id = student_result[0]
-        stu_no = student_result[1]
-        stu_nickname = student_result[2]
-        school_id = student_result[3]
-        school_name = student_result[4]
-        open_id_1 = student_result[5]
-        open_id_2 = student_result[6]
-        grade_id = student_result[7]
-        class_id = student_result[8]
-
-        # gps
-        arr = gps_str.split(',')
-        if arr[0] and arr[1]:
-            longitude = AcsManager._jwd_swap(float(arr[0]))
-            latitude = AcsManager._jwd_swap(float(arr[1]))
-            longitude, latitude = utils.wgs84togcj02(
-                float(longitude), float(latitude))
-            gps_str = '{},{}'.format(longitude, latitude)
-        else:
-            gps_str = ''
-
-        d = defaultdict()
-        d['id'] = redis_db.incr(RedisKey.ORDER_ID_INCR)
-        d['stu_no'] = stu_no
-        d['stu_id'] = stu_id
-        d['stu_name'] = stu_nickname
-        d['school_id'] = school_id
-        d['school_name'] = school_name
-        d['order_type'] = order_type
-        d['create_time'] = 'TO_TIMESTAMP({})'.format(add_time)
-        d['up_location'] = ''
-        d['gps'] = gps_str
-        d['car_id'] = cur_car_id
-        d['license_plate_number'] = license_plate_number
-        d['device_id'] = cur_device_id
-        d['fid'] = fid
-        d['cur_timestamp'] = str(add_time)
-        d['grade_name'] = grade[grade_id]
-        d['class_name'] = classes[class_id]
-        d['driver_name'] = driver_name
-        d['zgy_name'] = zgy_name
-        d['driver_mobile'] = driver_mobile
-        d['zgy_mobile'] = zgy_mobile
-
-        mysql_db.insert(mysql_cur, d, table_name='public.order')
-
-        if order_type == 1:
-            order_type_name = u"上学上车"
-        elif order_type == 2:
-            order_type_name = u"上学下车"
-        elif order_type == 3:
-            order_type_name = u"放学上车"
-        else:
-            order_type_name = u"放学下车"
-
-        up_time = datetime.fromtimestamp(add_time)
-        up_time_str = up_time.strftime('%Y-%m-%d %H:%M:%S')
-        # 推送模板消息
-        if open_id_1:
-            producer.send_parents_template_message(
-                open_id_1, d['id'], stu_nickname,
-                order_type_name, up_time_str, license_plate_number, stu_no)
-        if open_id_2:
-            producer.send_parents_template_message(
-                open_id_2, d['id'], stu_nickname,
-                order_type_name, up_time_str, license_plate_number, stu_no)
-        # 监控中心队列
-        try:
-            # 默认的
-            if not gps_str:
-                longitude = 0
-                latitude = 0
-            else:
-                gps_arr = gps_str.split(",")
-                longitude = int(float(gps_arr[0]) * (10**6))
-                latitude = int(float(gps_arr[1]) * (10**6))
-
-            state = 1 if order_type % 2 else 2
-            face_time = int(add_time) * 1000
-
-            d = {'version': '1.0', 'dataType': 2,
-                 'data': [{'licensePlate': license_plate_number,
-                           'plateColor': 'yellow',
-                           'faceTime': face_time,
-                           'state': state,
-                           'flag': 0,
-                           'sendTime': int(time.time() * 1000),
-                           'longitude': longitude,
-                           'latitude': latitude,
-                           'studentName': stu_nickname,
-                           'studentId': stu_no}]}
-            redis_db.rpush(
-                RedisKey.SC_ORDER_LIST, json.dumps(d, ensure_ascii=False))
-        except:
-            import traceback
-            print traceback.format_exc()
-            print gps_str
-
-    @staticmethod
-    def _get_created():
-        import pytz
-        tz = pytz.timezone('UTC')
-        now = datetime.now(tz)
-        return now.strftime("%Y-%m-%dT%H:%M:%S+08:00")
-
     def add_redis_queue(self, device_name, data, pkt_cnt):
         """
         添加到redis queue
@@ -384,7 +135,7 @@ class AcsManager(object):
         """
         rds_conn = db.rds_conn
         if not pkt_cnt:
-            self.check_people_list([], device_name)
+            self.check_person_list([], device_name)
         else:
             pkt_inx_key = '{}_pkt_inx'.format(device_name)
             raw_queue_key = "person_raw_" + device_name
@@ -392,16 +143,16 @@ class AcsManager(object):
             if data:
                 rds_conn.rpush(raw_queue_key, json.dumps(data))
             if int(tt) == int(pkt_cnt):
-                people_list = []
+                person_list = []
                 raw_data = rds_conn.lpop(raw_queue_key)
                 while raw_data:
-                    people_list.append(raw_data)
+                    person_list.append(raw_data)
                     raw_data = rds_conn.lpop(raw_queue_key)
                 # 删除计数key
                 rds_conn.delete(pkt_inx_key)
                 # 删除stream_no key,因为devwhitelist指令没有返回stream_no
                 rds_conn.delete("cur_{}_stream_no".format(device_name))
-                self.check_person_list(people_list, device_name)
+                self.check_person_list(person_list, device_name)
 
     @staticmethod
     def get_route_id(mysql_db, mysql_cur, device_name):
@@ -421,7 +172,7 @@ class AcsManager(object):
         return car_ids
 
     @db.transaction(is_commit=True)
-    def check_person_list(self, mysql_cur, people_list, device_name):
+    def check_person_list(self, mysql_cur, person_list, device_name):
         """
         检查人员列表
         (单设备检查人员是否需要更新)
@@ -430,7 +181,7 @@ class AcsManager(object):
         rds_conn = db.rds_conn
         mysql_db = db.PgsqlDbUtil
         fid_dict = {}
-        for row in people_list:
+        for row in person_list:
             data = base64.b64decode(row)
             length = len(data)
             offset = 0
@@ -476,7 +227,7 @@ class AcsManager(object):
                         update_list.append(str(pk))
 
             # 放到消息队列
-            producer.device_people_update_msg(
+            producer.device_person_update_msg(
                 add_list, del_list, update_list, device_name)
             print add_list, del_list, update_list
 
@@ -526,7 +277,8 @@ class AcsManager(object):
             'product_key': response['Data']['ProductKey'],
             'device_secret': response['Data']['DeviceSecret'],
             'sound_volume': 6,
-            'license_plate_number': ''
+            'license_plate_number': '',
+            'company_id': 1  # 无感行 默认
         }
         mysql_db.insert(mysql_cur, d, table_name='iot_device')
 
@@ -556,10 +308,10 @@ class AcsManager(object):
                            cur_volume, person_limit)
 
     @db.transaction(is_commit=False)
-    def _init_people(self, mysql_cur, people_list, device_name):
+    def _init_person(self, mysql_cur, person_list, device_name):
         mysql_db = db.PgsqlDbUtil
         fid_dict = {}
-        for row in people_list:
+        for row in person_list:
             data = base64.b64decode(row)
             length = len(data)
             offset = 0
@@ -587,7 +339,7 @@ class AcsManager(object):
             add_list = list(set(face_ids) - set(device_fid_set))
 
             # 放到消息队列
-            producer.device_people_update_msg(
+            producer.device_person_update_msg(
                 add_list, [], [], device_name)
 
     def check_version(self, device_name, cur_version, dev_time):
@@ -668,7 +420,7 @@ class AcsManager(object):
             print u"初始化人员"
 
             rds_conn.hset(RedisKey.DEVICE_CUR_STATUS, device_name, 5)
-            self._init_people([], device_name)
+            self._init_person([], device_name)
 
         if d:
             d['id'] = pk
@@ -753,73 +505,3 @@ class AcsManager(object):
             }
             mysql_db.update(mysql_cur, d, table_name='iot_device')
 
-    @db.transaction(is_commit=True)
-    def save_feature(self, mysql_cur, device_name, fid, feature):
-        mysql_db = db.PgsqlDbUtil
-        rds_conn = db.rds_conn
-        d = defaultdict()
-        mfr_id = mysql_db.get(
-            mysql_cur, "SELECT mfr_id FROM iot_device WHERE "
-                       "device_name='{}' LIMIT 1".format(device_name))[0]
-        sql = "SELECT id,face_id FROM feature " \
-              "WHERE mfr_id={} AND face_id={} LIMIT 1"
-        print sql.format(mfr_id, fid)
-        feature_obj = mysql_db.get(mysql_cur, sql.format(mfr_id, fid))
-        feature_id = feature_obj[0]
-        face_id = feature_obj[1]
-        if feature:
-
-            d['id'] = feature_id
-            d['feature'] = feature
-            d['feature_crc'] = zlib.crc32(base64.b64decode(feature))
-            d['status'] = 3     # 生成成功
-        else:
-            d['id'] = feature_id
-            d['status'] = 4     # 生成失败
-        mysql_db.update(mysql_cur, d, table_name='feature')
-        # if not feature:
-        #     data = {
-        #         'id': face_id,
-        #         'status': 5  # 预期数据准备失败
-        #     }
-        #     mysql_db.update(mysql_cur, data, table_name='face')
-        # 将设备从使用中删除
-        rds_conn.hdel(RedisKey.DEVICE_USED, device_name)
-
-    def acc_close(self, device_name, add_time):
-        """
-        acc关闭
-        向redis存入一条acc关闭的数据
-        """
-        rds_conn = db.rds_conn
-        # 取出滞留人员
-        face_ids = rds_conn.smembers(RedisKey.STUDENT_SET.format(device_name))
-        face_ids = [str(row) for row in list(face_ids)]
-
-        today = datetime.now()
-        today_str = today.strftime('%Y%m%d%H%M%S')
-        suffix = 'AM'
-        if today.hour > 12:
-            suffix = 'PM'
-
-        # 每次acc熄火唯一key
-        periods = "{}-{}-{}".format(today_str, device_name, suffix)
-        value = str(add_time) + "|" + ",".join(face_ids) + "|" + periods
-        rds_conn.hset(RedisKey.ACC_CLOSE, device_name, value)
-
-    def acc_open(self, device_name):
-        """
-        acc开启
-        """
-        rds_conn = db.rds_conn
-        rds_conn.hset(RedisKey.ACC_OPEN_TIME,
-                      device_name, int(time.time()))
-
-    def clear_setting(self, dev_name, seconds):
-        """清除关于这台设备的一些设置"""
-        rds_conn = db.rds_conn
-
-        # 学生相关的清除
-        if seconds < 20:
-            rds_conn.delete(RedisKey.STUDENT_SET.format(dev_name))
-            producer.clear_device_person_count(dev_name)

@@ -43,6 +43,7 @@ class BusConsumer(object):
         self.gen_feature = GenFeature(self.logger)
 
     def callback(self, ch, method, properties, body):
+        print "---------------------bus consumer-----------------------"
         try:
             data = json.loads(body.decode('utf-8'))
             arr = method.routing_key.split(".")

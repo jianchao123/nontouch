@@ -9,9 +9,7 @@ import base64
 from mns.account import Account
 from AcsManager import AcsManager
 import config
-from utils import get_logger
-from define import RedisKey
-from datetime import datetime
+from db import logger
 
 
 class ReceiveMessage(object):
@@ -48,7 +46,7 @@ class ReceiveMessage(object):
             return
 
         acs_manager.check_cur_stream_no(dev_name, jdata)
-        #print jdata
+        print jdata
         if 'cmd' in jdata:
             cmd = jdata['cmd']
             if cmd == 'syndata':
@@ -82,13 +80,6 @@ class ReceiveMessage(object):
             elif cmd == 'addface':
                 # 生成特征值返回的信息(公交不需要)
                 print jdata
-                # if 'feature_type' in jdata:
-                #     acs_manager.save_feature(
-                #         dev_name, jdata['fid'], jdata['feature'])
-                #     if jdata['feature']:
-                #         logger.info(u'生成特征值成功{}'.format(jdata['fid']))
-                #     else:
-                #         logger.info(u"生成特征值失败{}".format(jdata['fid']))
             elif cmd == 'updateface':
                 pass
             elif cmd == 'delface':
@@ -97,14 +88,6 @@ class ReceiveMessage(object):
                 if jdata['fid'] == -1:
                     pass
                     # acc关闭在公交上没有使用
-                    # log_id = int(jdata['gps'].split('|')[0])
-                    # # acc关闭
-                    # if log_id == 3:
-                    #     acs_manager.acc_close(dev_name, jdata['addtime'])
-                    # elif log_id == 4:
-                    #     acs_manager.acc_open(dev_name)
-                    # elif log_id == 20:
-                    #     print u"防滞留检测开启"
                 else:
                     logger.error("{}".format(str(jdata)))
                     if not jdata['type']:
@@ -130,7 +113,6 @@ class ReceiveMessage(object):
             elif cmd == 'syndata_ext':
                 pass
             elif cmd == 'poweroff':
-                #acs_manager.clear_setting(dev_name, jdata['seconds'])
                 pass
 
         # 删除消息
@@ -144,7 +126,6 @@ class ReceiveMessage(object):
               "%s\nWaitSeconds:%s\n" % (10 * "=", 10 * "=", self.queue_name,
                                         self.wait_seconds))
         from mns.mns_exception import MNSServerException, MNSClientNetworkException
-        logger = get_logger(config.log_path)
         acs_manager = AcsManager(
             self.product_key, self.mns_access_key_id,
             self.mns_access_key_secret, config.OSSDomain,

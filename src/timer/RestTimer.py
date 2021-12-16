@@ -459,16 +459,20 @@ class EveryFewMinutesExe(object):
         """
         mysql_db = db.MysqlDbUtil
         rds_conn = db.rds_conn
-
+        print "--------------min5-----------"
+        print rds_conn.get('BAIDU_ACCESS_TOKEN')
         # 百度鉴权access_token
         if not rds_conn.get('BAIDU_ACCESS_TOKEN'):
             host = 'https://aip.baidubce.com/oauth/2.0/token?' \
                    'grant_type=client_credentials&client_id={}&client_secret={}'
             response = requests.get(host.format(config.BAIDU_API_KEY,
                                                 config.BAIDU_SECRET_KEY))
+            print response.content
+            print response.json()
             d = response.json()
             if "error" not in d:
                 rds_conn.set('BAIDU_ACCESS_TOKEN', d['access_token'])
                 rds_conn.expire('BAIDU_ACCESS_TOKEN', int(d['expires_in'])-60)
             else:
+                print d
                 db.logger.error(str(d))

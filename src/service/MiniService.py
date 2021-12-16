@@ -35,6 +35,8 @@ class MiniService(object):
         try:
             session_info = wx_login.jscode2session(code)
         except:
+            import traceback
+            print traceback.format_exc()
             return -10
         print(session_info)
         session_key = session_info.get('session_key')
@@ -118,6 +120,8 @@ class MiniService(object):
         """
         注册人脸(小程序目前没有添加子账户的功能)
         """
+        print url
+        print mobile
         db.session.commit()
         rgn_client = AipFace(conf.config['BAIDU_APP_ID'],
                              conf.config['BAIDU_API_KEY'],
@@ -164,6 +168,7 @@ class MiniService(object):
         face_img.face_id = baidu_res["result"]["face_token"]
         face_img.face_last_time = datetime.now()
         face_img.status = 1     # 有效
+        face_img.company_id = user.company_id
         db.session.add(face_img)
         # 打开人脸功能
         user.is_open_face_rgz = True
@@ -173,6 +178,7 @@ class MiniService(object):
             producer.gen_feature(face_img.id, face_img.oss_url)
             return {'id': 0}
         except SQLAlchemyError:
+            print "提交错误"
             db.session.rollback()
             return -2
         finally:

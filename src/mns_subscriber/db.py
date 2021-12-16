@@ -10,7 +10,7 @@ import config
 import utils
 
 # logger
-logger = utils.get_logger(config.log_path)
+logger = utils.get_logger(config.project_dir + config.log_path)
 
 # mysql
 mysql_pool = PooledDB(MySQLdb, 5, **config.mysql_conf)

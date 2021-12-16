@@ -37,7 +37,7 @@ for section in secs:
     #     print k, v
 
 config_namespace = globals()
-# 公交redis使用3
+
 redis_conf = dict(host=config_namespace['redis_host'],
                   port=config_namespace['redis_port'],
                   db=config_namespace['redis_db'],

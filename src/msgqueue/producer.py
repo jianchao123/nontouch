@@ -73,7 +73,7 @@ def dev_while_list(device_name):
     _publish_msg('device_exchange', 'device.devwhitelist', json.dumps(data))
 
 
-def device_people_update_msg(add_list, del_list, update_list, device_name):
+def device_person_update_msg(add_list, del_list, update_list, device_name):
     """设备人员列表更新"""
     data = {
         "add_list": add_list,
