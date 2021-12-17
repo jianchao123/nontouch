@@ -239,7 +239,7 @@ class AcsManager(object):
         from mns_subscriber import config
         rds_conn = db.rds_conn
         mysql_db = db.PgsqlDbUtil
-        config.logger.info('create iot_device {} {}'.format(shd_devid, mac))
+        db.logger.info('create iot_device {} {}'.format(shd_devid, mac))
 
         dev_sql = "SELECT id FROM iot_device WHERE mac='{}' LIMIT 1"
 
@@ -267,7 +267,7 @@ class AcsManager(object):
         response = self.client.do_action_with_exception(request)
         response = json.loads(response)
         if not response['Success']:
-            config.logger.info('api create fail {}'.format(mac))
+            db.logger.info('api create fail {}'.format(mac))
             return None
         # 添加记录
         d = {
@@ -280,6 +280,9 @@ class AcsManager(object):
             'license_plate_number': '',
             'company_id': 1  # 无感行 默认
         }
+        sql = "SELECT company_id FROM machine WHERE mac='{}'"
+        company_id = mysql_db.get(mysql_cur, sql.format(mac))[0]
+        d['company_id'] = company_id
         mysql_db.insert(mysql_cur, d, table_name='iot_device')
 
         # 发布消息注册
@@ -293,7 +296,7 @@ class AcsManager(object):
             'dev_mac': mac
         }
         retd = self._send_device_msg('newdev', msg)
-        config.logger.error(retd)
+        db.logger.error(retd)
         rds_conn.hset(RedisKey.DEVICE_CUR_STATUS, dev_name, 1)
         rds_conn.rpush('DEVICE_NAME_QUEUE', dev_name)
 
@@ -350,7 +353,7 @@ class AcsManager(object):
         all_heartbeat_val = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         rds_conn.hset(RedisKey.ALL_HEARTBEAT_HASH, device_name, all_heartbeat_val)
         # 小于当前版本号就更新
-        if cur_version < 1:
+        if cur_version < 276:
             self._upgrade_version(device_name)
 
     @db.transaction(is_commit=True)
@@ -461,6 +464,7 @@ class AcsManager(object):
             producer.dev_while_list(device_name)
             pk, status, version_no, sound_volume, license_plate_number, \
                 device_type, person_limit = self._get_device_info_data(device_name)
+            print pk, status, version_no, sound_volume, license_plate_number
             d = defaultdict()
             d['id'] = pk
             d['open_time'] = 'TO_TIMESTAMP({})'.format(int(time.time()))

@@ -89,10 +89,12 @@ class SubErrorCode(object):
     ADMIN_USER_PERMISSION_GT_COMPANY = (200101, u"用户权限大于公司权限")
 
     CAR_NOT_BINDING_ROUTE = (200201, u"车辆没有绑定线路")
+    CAR_ALREADY_BINDING = (200202, u"车辆已经被绑定")
 
     # 线路200210 - 200219
     ROUTE_NAME_ONLY_NUMBERS = (200210, u"线路名字只能是数字")
     ROUTE_ALREADY_DISABLED = (200211, u"线路已经禁用,车辆无法绑定该线路")
+    ROUTE_NOT_GO_BACK = (200212, u"不是去程和返程")
 
     # 权限200220 - 200229
     PERMISSION_PRIVILEGE_SET = (200220, u"权限集合错误")

@@ -443,52 +443,6 @@ class DeviceBusiness(object):
         person_limit = data['person_limit']
         self._set_workmode(device_name, int(workmode), chepai, cur_volume, person_limit)
 
-    # @transaction(is_commit=True)
-    # def device_people_list_save(self, pgsql_cur, data):
-    #     """保存设备上的信息到数据库"""
-    #     import struct
-    #     print "=================device_people_list_save====================="
-    #     pgsql_db = MysqlDbUtil
-    #     people_list_str = data['people_list_str']
-    #     device_name = data['device_name']
-    #     server_face_ids = data['server_face_ids']
-    #
-    #     people_raw_list = []
-    #     fid_list = []
-    #     people_list = people_list_str.split(",")
-    #     for row in people_list:
-    #         people_raw_list.append(row)
-    #         data = base64.b64decode(row)
-    #         length = len(data)
-    #         offset = 0
-    #         while offset < length:
-    #             s = data[offset: offset + 16]
-    #             ret_all = struct.unpack('<IiiI', s)
-    #             fid = ret_all[0]
-    #             fid_list.append(str(fid))
-    #             offset += 16
-    #     device_sql = "SELECT id FROM device WHERE device_name='{}' LIMIT 1"
-    #     device = pgsql_db.get(pgsql_cur, device_sql.format(device_name))
-    #     device_id = device[0]
-    #
-    #     sql = "SELECT id,info_str FROM device_face_info " \
-    #           "WHERE device_id={} LIMIT 1"
-    #     result = pgsql_db.get(pgsql_cur, sql.format(device_id))
-    #     if result:
-    #         d = {
-    #             'id': result[0],
-    #             'info_str': ",".join(fid_list),
-    #             'update_timestamp': '{}'.format(int(time.time()))
-    #         }
-    #         pgsql_db.update(pgsql_cur, d, 'device_face_info')
-    #     else:
-    #         d = {
-    #             'device_id': device_id,
-    #             'info_str': ",".join(fid_list),
-    #             'update_timestamp': '{}'.format(int(time.time()))
-    #         }
-    #         pgsql_db.insert(pgsql_cur, d, 'device_face_info')
-
     @transaction(is_commit=False)
     def device_people_list_upgrade(self, pgsql_cur, data):
         """设备人员更新"""

@@ -58,6 +58,11 @@ class CarService(object):
                 route = db.session.query(BusRoute).filter(
                     BusRoute.id == car.route_id).first()
                 d['line_no'] = route.line_no
+                if car.route_id_1:
+                    route = db.session.query(BusRoute).filter(
+                        BusRoute.id == car.route_id_1).first()
+                    d['line_no'] += " " + route.line_no
+
             results.append(d)
         return {'count': count, 'results': results}
 
@@ -123,7 +128,7 @@ class CarService(object):
             db.session.close()
 
     @staticmethod
-    def car_binding(pk, route_id):
+    def car_binding(pk, route_ids):
         """
         绑定线路
         :param pk:
@@ -131,19 +136,33 @@ class CarService(object):
         :return:
         """
         db.session.commit()
+        route_id_list = route_ids.split(",")
+
+        # 如果是两条线路,判断group_no是否相等
+        if len(route_id_list) == 2:
+            results = BusRoute.query.filter(
+                BusRoute.id.in_(route_id_list)).all()
+            if len(results) != 2:
+                return -5 # 逻辑错误
+            if results[0].group_no != results[1].group_no:
+                return -6   # 线路不是去返程
+
         car = db.session.query(BusCar).filter(BusCar.id == pk).first()
         if not car:
             return -1
         if car.status != 1: # 不是未绑线状态
             return -3
-        route = BusRoute.query.filter(BusRoute.id == route_id).first()
+        route = BusRoute.query.filter(BusRoute.id.in_(route_id_list)).first()
         if route.status == 2:   # 线路已经禁用
             return -4
         car.status = 2  # 已绑线
-        car.route_id = route_id
-        route_2 = BusRoute.query.filter(BusRoute.group_no == route.group_no,
-                                        BusRoute.id != route_id).first()
-        car.route_id_1 =route_2.id
+        car.route_id = route_id_list[0]
+        try:
+            route_id_list.index(2)
+            car.route_id_1 = route_id_list[1]
+        except ValueError:
+            pass
+
         try:
             db.session.commit()
             return pk

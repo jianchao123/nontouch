@@ -52,7 +52,6 @@ class ReceiveMessage(object):
             if cmd == 'syndata':
                 dev_name = jdata['devid']
                 if dev_name == 'newdev':
-                    config.logger.error(jdata)
                     acs_manager.create_device(jdata['mac'], jdata['shd_devid'])
 
                 else:
@@ -62,7 +61,7 @@ class ReceiveMessage(object):
                     #         jdata['devtime']).strftime('%Y-%m-%d %H:%M:%S')))
                     acs_manager.check_version(
                         dev_name, jdata['version'], jdata['devtime'])
-                    if jdata['version'] == 1:
+                    if jdata['version'] == 276:
                         ret = acs_manager.init_device_params(
                             dev_name, jdata['shd_devid'])
                         acs_manager.device_rebooted_setting_open_time(

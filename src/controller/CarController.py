@@ -340,9 +340,9 @@ parameters:
     required: true
     schema:
       properties:
-        route_id:
+        route_ids:
           type: string
-          description: 线路id
+          description: 线路id 例 12,32  (最少一个id,最多两个,逗号拼接)
 
 responses:
   200:
@@ -362,8 +362,8 @@ responses:
               type: integer
               description: 绑定成功的Id
     """
-    route_id = args['route_id']
-    ret = CarService.car_binding(pk, route_id)
+    route_ids = args['route_ids']
+    ret = CarService.car_binding(pk, route_ids)
     if ret == -1:
         raise AppError(*GlobalErrorCode.OBJ_NOT_FOUND_ERROR)
     if ret == -2:
@@ -372,6 +372,8 @@ responses:
         raise AppError(*SubErrorCode.STATUS_ERR)
     if ret == -4:
         raise AppError(*SubErrorCode.ROUTE_ALREADY_DISABLED)
+    if ret == -6:
+        raise AppError(*SubErrorCode.ROUTE_NOT_GO_BACK)
     return ret
 
 
